@@ -294,6 +294,36 @@ print("First Degree Families with Restricted Ambry Information")
 describeFamilies(considered_fams)
 ```
 
+Below we have the function to count how many affected family members there are in each family. 0 means that the family members are all unaffected, 1 means one family member is affected, etc. 
+
+```{r affected families detailed description function}
+affectedFamiliesLister <- function(f){
+  affectedFamiliesList = list()
+  for(i in 1:length(families)){
+    fam = as.data.frame(f[[i]])
+    fam = fam %>% filter(isAffAny==1) %>% filter(isProband==0)
+      if(nrow(fam) > 0){
+        affectedFamiliesList[[i]] = nrow(fam)
+      }
+      else{
+        affectedFamiliesList[[i]] = 0}
+    }
+  return(affectedFamiliesList)
+}
+```
+
+Now we can apply it to each of our families
+
+```{r affected families description}
+considered_fams = mlh1StatusFamilies
+print("Full Families from PedUtils")
+print(unlist(affectedFamiliesLister(considered_fams)))
+
+```
+
+
+
+
 ## Generating PanelPRO Output
 
 ```{r, cache=TRUE}
@@ -357,10 +387,29 @@ summary(firstDegreeRisk)
 firstDegreeRisk #here it does not
 
 mlh1FamiliesTotal <- c()
+actualMLH1 <- list()
 for(i in 1:length(families)){
   if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 ==1)) > 0){
-  mlh1FamiliesTotal <- c(mlh1FamiliesTotal, i)} 
+  mlh1FamiliesTotal <- c(mlh1FamiliesTotal, i)
+  actualMLH1[[i]] = 1} 
+  else{
+    actualMLH1[[i]] = 0}
 }
 
-# ggplot(data= fullRisk) + geom_line
+
+ggplot(data= as.data.frame(fullRisk)) + geom_histogram(aes(x=fullRisk))
+
+
+ggplot(data= as.data.frame(firstDegreeRisk)) + geom_histogram(aes(x=firstDegreeRisk))
+
+
 ```
+
+
+
+
+
+
+
+
+
