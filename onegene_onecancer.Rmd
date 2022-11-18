@@ -167,15 +167,17 @@ ambryRelativeInfo <- function(ped){
 
 ## Filter to Affected Family
 
-Next we want to make a function that will filter to the affected family members in addition to the proband.
+Next we want to make a function that will filter to the affected family members in addition to the proband and their parents.
 
 ```{r affected family function}
 #returns all affected family members and proband (affected or otherwise)
 affectedFamilyMembers <- function(ped){
   proband <- ped %>% filter(isProband==1)
+  mother <- ped %>% filter(ID == proband$MotherID)
+  father <- ped %>% filter(ID == proband$FatherID)
   relatives <- ped %>% filter(isAffAny==1)
-  relatives <- relatives %>% filter(isProband==0)
-  affectedFam <- rbind(proband, relatives)
+  relatives <- relatives %>% filter(isProband==0 && ID != proband$MotherID && ID != proband$FatherID) #to make sure we don't duplicate family members
+  affectedFam <- rbind(proband, relatives, mother, father)
   return(affectedFam)
 }
 ```
@@ -321,16 +323,14 @@ for(i in 1:length(families)){
 # 
 # 
 # #for first degree ambry families
-outputsFirstDegreeAmbry <- list ()
-firstDegreeAmbryCarrierRisk <- list()
-for(i in 1:length(families)){
-  if(nrow(ambryFirstDegree[[i]]) > 1){
-    View(ambryFirstDegree)}
-  out = PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes="MLH1", cancers="Colorectal")
-  id = as.character(probandIDS[i])
-  firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
-  outputsFirstDegreeAmbry[[i]] = out#DF
-}
+# outputsFirstDegreeAmbry <- list ()
+# firstDegreeAmbryCarrierRisk <- list()
+# for(i in 1:length(families)){
+#   out = PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes="MLH1", cancers="Colorectal")
+#   id = as.character(probandIDS[i])
+#   firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
+#   outputsFirstDegreeAmbry[[i]] = out#DF
+# }
 
 ```
 
@@ -338,15 +338,29 @@ Above we have put the PanelPRO outputs:
 
 | Variable | Description | 
 | ----- | ---- | 
-| fullCarrierRisk | Carrier Risk for MLH1 given the full family pedigree |
-| outputsFull | Outputs of PanelPRO for full family pedigree |
+| fullCarrierRisk | Carrier Risk for MLH1 given the full family pedigree (no MLH1 information) |
+| outputsFull | Outputs of PanelPRO for full family pedigree (no MLH1 information) |
 | firstDegreeCarrierRisk | Carrier Risk for MLH1 given the first degree family pedigree |
-| outputsFirstDegree | Car
+| outputsFirstDegree | Outputs of PanelPro for first degree families (no MLH1 information)|
+| firstDegreeAmbryCarrierRisk | Carrier risk for MLH1 given ambry information and restricted pedigree (proband, parents, and affected siblings)|
+| outputsFirstDegreeAmbry | PanelPRO outputs for restricted information families|
 
 ## Graphs
 
 ```{r}
 fullRisk <- unlist(fullCarrierRisk)
 summary(fullRisk)
+fullRisk #here the highest carrier risk corresponds with the actual carrier
+
+firstDegreeRisk <- unlist(firstDegreeCarrierRisk)
+summary(firstDegreeRisk)
+firstDegreeRisk #here it does not
+
+mlh1FamiliesTotal <- c()
+for(i in 1:length(families)){
+  if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 ==1)) > 0){
+  mlh1FamiliesTotal <- c(mlh1FamiliesTotal, i)} 
+}
+
 # ggplot(data= fullRisk) + geom_line
 ```
