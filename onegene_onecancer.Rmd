@@ -316,9 +316,23 @@ Now we can apply it to each of our families
 
 ```{r affected families description}
 considered_fams = mlh1StatusFamilies
+print("Full Families from PedUtils with MLH1 status")
+print(unlist(affectedFamiliesLister(considered_fams)))
+
+#this should be the same as above but just want to check to make sure
+considered_fams = families #no mlh1 status (should be the same as above)
 print("Full Families from PedUtils")
 print(unlist(affectedFamiliesLister(considered_fams)))
 
+#this should be less than or equal to above
+considered_fams = firstDegree
+print("First Degree Families")
+print(unlist(affectedFamiliesLister(considered_fams)))
+
+# #this should also be the same as first degree families above but will provide us a check
+considered_fams = ambryFirstDegree
+print("First Degree Families with Restricted Ambry Information")
+print(unlist(affectedFamiliesLister(considered_fams)))
 ```
 
 
@@ -364,6 +378,51 @@ for(i in 1:length(families)){
 
 ```
 
+The code to get the outputs for the ambry information first degree families is not working because of the following family:
+
+```{r}
+ambryFirstDegree[[1]]
+```
+
+and we get the following error message:
+
+
+Error in .boundAgeFromRelatives(rel_ages = rel_ages) : 
+object 'AgeDistribution' not found
+9.
+.boundAgeFromRelatives(rel_ages = rel_ages)
+8.
+FUN(X[[i]], ...)
+7.
+lapply(rel_ages_list, function(rel_ages) {
+.boundAgeFromRelatives(rel_ages = rel_ages)
+})
+6.
+ageImpute(ped = ped, rel_l = rel_l, proband = proband, impute_times = impute.times, 
+max_iter_tries = max.iter.tries, penet_db = db$penet$penet_c, 
+penet_cbc_db = db$penet$penet_cbc)
+5.
+(function (ped, rel_l) 
+{
+ageImpute(ped = ped, rel_l = rel_l, proband = proband, impute_times = impute.times, 
+max_iter_tries = max.iter.tries, penet_db = db$penet$penet_c, ...
+4.
+mapply(FUN = f, ..., SIMPLIFY = FALSE)
+3.
+Map(function(ped, rel_l) {
+ageImpute(ped = ped, rel_l = rel_l, proband = proband, impute_times = impute.times, 
+max_iter_tries = max.iter.tries, penet_db = db$penet$penet_c, 
+penet_cbc_db = db$penet$penet_cbc) ...
+2.
+checkFam(ped = pedigree, db = db, proband = proband, unknown.race = unknown.race, 
+unknown.ancestry = unknown.ancestry, ignore.proband.germ = ignore.proband.germ, 
+impute.missing.ages = impute.missing.ages, impute.times = iterations, 
+max.iter.tries = max.iter.tries, random.seed = random.seed)
+1.
+PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes = "MLH1", cancers = "Colorectal")
+
+
+
 Above we have put the PanelPRO outputs: 
 
 | Variable | Description | 
@@ -374,6 +433,36 @@ Above we have put the PanelPRO outputs:
 | outputsFirstDegree | Outputs of PanelPro for first degree families (no MLH1 information)|
 | firstDegreeAmbryCarrierRisk | Carrier risk for MLH1 given ambry information and restricted pedigree (proband, parents, and affected siblings)|
 | outputsFirstDegreeAmbry | PanelPRO outputs for restricted information families|
+
+
+
+
+
+## Table
+
+```{r make a table with the outputs}
+mlh1ProbandsTotal <- c()
+probandMLH1 <- list()
+for(i in 1:length(families)){
+  if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 ==1) %>% filter(isProband==1) > 0)){
+    mlh1ProbandsTotal <- c(mlh1ProbandsTotal, i)
+    probandMLH1[[i]] = 1
+   } 
+  else{
+    probandMLH1[[i]] = 0
+  }}
+
+summaryTableMLH1 <- cbind(unlist(fullCarrierRisk), unlist(firstDegreeCarrierRisk), unlist(affectedFamiliesLister(families)), unlist(affectedFamiliesLister(firstDegree)), unlist(probandMLH1))
+
+summaryTableMLH1 <- as.data.frame(summaryTableMLH1)
+
+names(summaryTableMLH1) <- c("Carrier Risk for Full Families", "Carrier Risk for First Degree Families", "Affected Individuals Full Familes", "Affected Individuals First Degree Families", "True MLH1 Carriers")
+
+print(summaryTableMLH1)
+
+```
+
+
 
 ## Graphs
 
