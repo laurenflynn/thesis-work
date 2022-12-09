@@ -56,6 +56,14 @@ for (i in 1:10) {
                       PanelPRODatabase, genes, cancers,
                       includeGeno = TRUE, includeBiomarkers = TRUE)
   famDF = as.data.frame(fam)
+  for(j in 1:nrow(famDF)){
+    if(famDF[j,]$isAffAny == 0){
+      famDF[j,]$AgeAny = NA    
+    }
+    if(famDF[j,]$isAffCOL == 0){
+      famDF[j,]$AgeCOL = NA    
+    }
+  }
   proband = famDF %>% filter(isProband==1)
   probandIDS = c(probandIDS, proband$ID)
   probandMLH1Status = c(probandMLH1Status, proband$MLH1)
@@ -95,7 +103,8 @@ removeRelativeStatus <- function(ped){
 
 
 Now we can apply the functions on the full families, saving the full families with MLH1 status into a separate variable.
-```{r}
+
+```{r remove proband status from families}
 mlh1StatusFamilies <- families
 
 for(i in 1:length(families)){
@@ -366,22 +375,34 @@ for(i in 1:length(families)){
 
 # 
 # 
-# #for first degree ambry families
-# outputsFirstDegreeAmbry <- list ()
-# firstDegreeAmbryCarrierRisk <- list()
+#for first degree ambry families
+outputsFirstDegreeAmbry <- list ()
+firstDegreeAmbryCarrierRisk <- list()
+#considers probands and their parents and affected family members
 # for(i in 1:length(families)){
 #   out = PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes="MLH1", cancers="Colorectal")
 #   id = as.character(probandIDS[i])
 #   firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
 #   outputsFirstDegreeAmbry[[i]] = out#DF
 # }
+#gives the following error message
+#Error in .boundAgeFromRelatives(rel_ages = rel_ages) : 
+#  object 'AgeDistribution' not found
 
+#works when we just consider the proband
+for(i in 1:length(families)){
+  out = PanelPRO::PanelPRO(ambryFirstDegree[[i]] %>% filter(isProband==1), genes="MLH1", cancers="Colorectal")
+  id = as.character(probandIDS[i])
+  firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
+  outputsFirstDegreeAmbry[[i]] = out#DF
+}
 ```
 
 The code to get the outputs for the ambry information first degree families is not working because of the following family:
 
 ```{r}
-ambryFirstDegree[[1]]
+ambryFirstDegree[[3]]
+#out = PanelPRO::PanelPRO(ambryFirstDegree[[1]], genes="MLH1", cancers="Colorectal")
 ```
 
 and we get the following error message:
@@ -491,6 +512,15 @@ ggplot(data= as.data.frame(fullRisk)) + geom_histogram(aes(x=fullRisk))
 
 ggplot(data= as.data.frame(firstDegreeRisk)) + geom_histogram(aes(x=firstDegreeRisk))
 
+
+ggplot(data= as.data.frame(fullRisk)) + geom_col(aes(x=1:length(families), y = fullRisk))
+
+
+ggplot(data= as.data.frame(firstDegreeRisk)) + geom_col(aes(x=1:length(families), y = firstDegreeRisk))
+
+summaryTableMLH1 <- summaryTableMLH1 %>% mutate("famID" = 1:length(families))
+                                                  
+#facet_grid(
 
 ```
 
