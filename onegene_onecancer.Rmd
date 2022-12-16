@@ -27,13 +27,14 @@ library(ggplot2)
 
 This first section uses the PedUtils package to generate simulated families. The only gene we are including is MLH1 and the only cancer we are including is colorectal cancer.
 
-```{r generate families, warning=FALSE, message=FALSE}
+```{r generate families, warning=FALSE, message=FALSE, cache = TRUE}
 #generate families
+numberFamilies <- 100
 families = list()
 probandIDS = c()
 probandMLH1Status = c()
 #outputs = c()
-for (i in 1:10) {
+for (i in 1:numberFamilies) {
   # Cancers
   cancers = "Colorectal"
   # Genes
@@ -165,7 +166,7 @@ ambryProbandInfo <- function(ped){
 ambryRelativeInfo <- function(ped){
   relatives = ped %>% filter(isProband==0)
   #print(relatives)
-  relatives$CurAge <- NULL
+  #relatives$CurAge <- NULL
   relatives$isDead <- NULL
   #relatives$riskMod <- character(0)
   #relatives$interAge <- character(0)
@@ -349,7 +350,7 @@ print(unlist(affectedFamiliesLister(considered_fams)))
 
 ## Generating PanelPRO Output
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, warning=FALSE, quiet = TRUE, cache =TRUE, message=FALSE}
 # #for full families
 outputsFull <- list ()
 fullCarrierRisk <- list()
@@ -379,14 +380,15 @@ for(i in 1:length(families)){
 outputsFirstDegreeAmbry <- list ()
 firstDegreeAmbryCarrierRisk <- list()
 #considers probands and their parents and affected family members
-# for(i in 1:length(families)){
-#   out = PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes="MLH1", cancers="Colorectal")
-#   id = as.character(probandIDS[i])
-#   firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
-#   outputsFirstDegreeAmbry[[i]] = out#DF
-# }
-#gives the following error message
-#Error in .boundAgeFromRelatives(rel_ages = rel_ages) : 
+for(i in 1:length(families)){
+ # browser()
+  out = PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes="MLH1", cancers="Colorectal", debug = TRUE)
+  id = as.character(probandIDS[i])
+  firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
+  outputsFirstDegreeAmbry[[i]] = out#DF
+}
+# gives the following error message
+# Error in .boundAgeFromRelatives(rel_ages = rel_ages) :
 #  object 'AgeDistribution' not found
 
 #works when we just consider the proband
@@ -473,58 +475,99 @@ for(i in 1:length(families)){
     probandMLH1[[i]] = 0
   }}
 
-summaryTableMLH1 <- cbind(unlist(fullCarrierRisk), unlist(firstDegreeCarrierRisk), unlist(affectedFamiliesLister(families)), unlist(affectedFamiliesLister(firstDegree)), unlist(probandMLH1))
+summaryTableMLH1 <- cbind(format(unlist(fullCarrierRisk), scientific=FALSE), unlist(firstDegreeCarrierRisk), unlist(firstDegreeAmbryCarrierRisk), unlist(affectedFamiliesLister(families)), unlist(affectedFamiliesLister(firstDegree)), unlist(probandMLH1))
 
 summaryTableMLH1 <- as.data.frame(summaryTableMLH1)
 
-names(summaryTableMLH1) <- c("Carrier Risk for Full Families", "Carrier Risk for First Degree Families", "Affected Individuals Full Familes", "Affected Individuals First Degree Families", "True MLH1 Carriers")
+names(summaryTableMLH1) <- c("Carrier Risk for Full Families", "Carrier Risk for First Degree Families", "Carrier Risk for Ambry Info", "Affected Individuals Full Familes", "Affected Individuals First Degree Families", "True MLH1 Carriers in Probands")
 
 print(summaryTableMLH1)
 
+summaryTable <- cbind(1:numberFamilies, summaryTableMLH1)
+names(summaryTable) <- c("famNumber", "carrierRiskFullFamilies", "carrierRiskFirstDegreeFamilies", "carrierRiskAmbryInfo", "affectedIndividualsFullFamilies", "affectedIndividualsFirstDegreeFamilies", "probandsMLH1")
+summaryTable
+
+ggplot(data= summaryTable) +  geom_point(aes(x=famNumber, y=carrierRiskFullFamilies), color="Red") + 
+                              geom_point(aes(x=famNumber, y= carrierRiskFirstDegreeFamilies), color="Blue") + 
+                              geom_point(aes(x=famNumber, y=carrierRiskAmbryInfo), color="Green") +
+                              geom_point(aes(x=famNumber, y=probandsMLH1), color = "Purple") +
+                              #scale_y_continuous(breaks = scales::pretty_breaks(n = 10), limits = c(0,1)) +
+                              labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
+
+
+ggplot(data= summaryTable) +  geom_point(aes(x=famNumber, y=carrierRiskFullFamilies, color="Carrier Risk for Full Families")) + 
+                              geom_point(aes(x=famNumber, y= carrierRiskFirstDegreeFamilies, color="Carrier Risk for First Degree Families")) + 
+                              geom_point(aes(x=famNumber, y=carrierRiskAmbryInfo, color="Carrier Risk Given Ambry Info")) +
+                              geom_point(aes(x=famNumber, y=probandsMLH1, color = "Probands with MLH1")) +
+                              #scale_y_continuous(breaks = scales::pretty_breaks(n = 10), limits = c(0,1)) +
+                              labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
 ```
 
 
 
 ## Graphs
 
-```{r}
-fullRisk <- unlist(fullCarrierRisk)
-summary(fullRisk)
-fullRisk #here the highest carrier risk corresponds with the actual carrier
-
-firstDegreeRisk <- unlist(firstDegreeCarrierRisk)
-summary(firstDegreeRisk)
-firstDegreeRisk #here it does not
-
-mlh1FamiliesTotal <- c()
-actualMLH1 <- list()
-for(i in 1:length(families)){
-  if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 ==1)) > 0){
-  mlh1FamiliesTotal <- c(mlh1FamiliesTotal, i)
-  actualMLH1[[i]] = 1} 
-  else{
-    actualMLH1[[i]] = 0}
-}
-
-
-ggplot(data= as.data.frame(fullRisk)) + geom_histogram(aes(x=fullRisk))
-
-
-ggplot(data= as.data.frame(firstDegreeRisk)) + geom_histogram(aes(x=firstDegreeRisk))
-
-
-ggplot(data= as.data.frame(fullRisk)) + geom_col(aes(x=1:length(families), y = fullRisk))
-
-
-ggplot(data= as.data.frame(firstDegreeRisk)) + geom_col(aes(x=1:length(families), y = firstDegreeRisk))
-
-summaryTableMLH1 <- summaryTableMLH1 %>% mutate("famID" = 1:length(families))
-                                                  
-#facet_grid(
+```{r draft graphs, echo = FALSE}
+# fullRisk <- unlist(fullCarrierRisk)
+# summary(fullRisk)
+# fullRisk #here the highest carrier risk corresponds with the actual carrier
+# 
+# firstDegreeRisk <- unlist(firstDegreeCarrierRisk)
+# summary(firstDegreeRisk)
+# firstDegreeRisk #here it does not
+# 
+# mlh1FamiliesTotal <- c()
+# actualMLH1 <- list()
+# for(i in 1:length(families)){
+#   if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 ==1)) > 0){
+#     mlh1FamiliesTotal <- c(mlh1FamiliesTotal, i)
+#     actualMLH1[[i]] = 1
+#     } 
+#   else{
+#     actualMLH1[[i]] = 0
+#     }
+# }
+# 
+# probandMLH1 <- list()
+# for(i in 1:length(families)){
+#   proband <- families[[i]] %>% filter(isProband == 1)
+#   if(!is.na(proband$MLH1) && proband$MLH1 == 1){
+#     probandMLH1[i] <- 1
+#   }
+#   else{
+#     probandMLH1[i] <- 0
+#   }
+# }
+# probandMLH1
+# 
+# 
+# ggplot(data= as.data.frame(fullRisk)) + geom_histogram(aes(x=fullRisk))
+# 
+# 
+# ggplot(data= as.data.frame(firstDegreeRisk)) + geom_histogram(aes(x=firstDegreeRisk))
+# 
+# 
+# ggplot(data= as.data.frame(fullRisk)) + geom_col(aes(x=1:length(families), y = fullRisk))
+# 
+# 
+# ggplot(data= as.data.frame(firstDegreeRisk)) + geom_col(aes(x=1:length(families), y = firstDegreeRisk))
+# 
+# summaryTableMLH1 <- summaryTableMLH1 %>% mutate("famID" = 1:length(families))
+#                                                   
+# #facet_grid(
 
 ```
 
 
+```{r plotting}
+# risks <- as.data.frame(c(1:length(families), c(unlist(fullCarrierRisk)), c(unlist(firstDegreeCarrierRisk)),c(unlist(firstDegreeAmbryCarrierRisk)), c(unlist(probandMLH1))))
+# #ggplot(data = risks
+# 
+# fullCarrierRisk <- unlist(fullCarrierRisk)
+# a <- as.data.frame(c(1:10), fullCarrierRisk)
+# names(a) <- c("Family ID", "Carrier Risk")
+# hist(unlist(fullCarrierRisk))
+```
 
 
 
