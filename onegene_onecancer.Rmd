@@ -21,6 +21,7 @@ library(dplyr)
 library(truncnorm)
 library(PanelPRO)
 library(ggplot2)
+library(tidyverse)
 ```
 
 ## Functions to Generate Families
@@ -502,7 +503,42 @@ ggplot(data= summaryTable) +  geom_point(aes(x=famNumber, y=carrierRiskFullFamil
                               #scale_y_continuous(breaks = scales::pretty_breaks(n = 10), limits = c(0,1)) +
                               labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
 ```
+make 3 scatter plots 
+carrier risk for full family vs first degree
+carrier risk for full family vs ambry
+carrier risk ambry vs first degree
 
+```{r}
+head(summaryTable)
+tidyRisks <- summaryTable %>%
+  pivot_longer(c("carrierRiskFullFamilies", "carrierRiskFirstDegreeFamilies", "carrierRiskAmbryInfo"), names_to = "riskType", values_to = "riskLevel")
+head(tidyRisks)
+nrow(tidyRisks)
+
+ggplot(data = tidyRisks, aes(x = famNumber, y = riskLevel)) +
+  geom_point(aes(x = famNumber, y = riskLevel, colour= probandsMLH1, shape = affectedIndividualsFirstDegreeFamilies)) +
+  #scale_y_discrete(name = "mlh1 risk", breaks=c("0","0.01","0.1","0.5","1"), limits = c(-1,1) ) +
+  facet_wrap(vars(riskType), ncol = 3) +
+  labs(x = "Family ID", y = "Carrier Risk for MLH1") 
+```
+
+see if the bias is predictable
+get rid of the purple points--instead give the proband carriers as a triangle and the noncarriers as a circle
+we want to see if we can predict the green using blue (predict full fam given ambry info)
+
+add another category first and second degree relatives affected only #closer to ambry
+
+try a box plot getting rid of family id's, computing differences between the four points of each family and plot those
+
+
+```{r difference between predictions}
+head(summaryTable)
+summaryTable <- summaryTable %>% 
+                    mutate(diffFullFirst = as.double(carrierRiskFullFamilies) - as.double(carrierRiskFirstDegreeFamilies)) %>%
+                    mutate(diffFullAmbry = as.double(carrierRiskFullFamilies) - as.double(carrierRiskAmbryInfo)) %>%
+                    mutate(diffFullAmbry = as.double(carrierRiskFullFamilies) - as.double(carrierRiskAmbryInfo)) %>%
+head(summaryTable)
+```
 
 
 ## Graphs
