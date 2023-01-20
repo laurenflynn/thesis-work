@@ -3,12 +3,16 @@ title: "Thesis Work"
 author: "Lauren Flynn"
 date: "2022-11-03"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
-#change from 500 to 5000 families \# make a four column table, one for each level of the families, carrier risk,
+#change from 500 to 5000 families \# make a four column table, one for
+each level of the families, carrier risk,
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache= TRUE)
 set.seed(777)
 setwd("/Users/flynnlauren7/Desktop/Internships Summer 2022/Bayes Mendel/PedUtils/R")
 files.sources = list.files()
@@ -20,17 +24,19 @@ library(plyr) #need to load plyr before dplyr
 library(dplyr)
 library(truncnorm)
 library(PanelPRO)
-library(ggplot2)
 library(tidyverse)
+library(MASS)
 ```
 
 ## Functions to Generate Families
 
-This first section uses the PedUtils package to generate simulated families. The only gene we are including is MLH1 and the only cancer we are including is colorectal cancer.
+This first section uses the PedUtils package to generate simulated
+families. The only gene we are including is MLH1 and the only cancer we
+are including is colorectal cancer.
 
 ```{r generate families, warning=FALSE, message=FALSE, cache = TRUE}
 #generate families
-numberFamilies <- 100
+numberFamilies <- 500
 families = list()
 probandIDS = c()
 probandMLH1Status = c()
@@ -77,10 +83,12 @@ for (i in 1:numberFamilies) {
 }
 ```
 
-
 ## Remove MLH1 Status from Probands
 
-Here we will create a function to remove the MLH1 status from the probands so that PanelPRO can predict the status. Additionally, there is a function to remove the relative status in order to get information that more accurately resembles the Ambry requistion information.
+Here we will create a function to remove the MLH1 status from the
+probands so that PanelPRO can predict the status. Additionally, there is
+a function to remove the relative status in order to get information
+that more accurately resembles the Ambry requistion information.
 
 ```{r}
 
@@ -103,8 +111,8 @@ removeRelativeStatus <- function(ped){
 
 ```
 
-
-Now we can apply the functions on the full families, saving the full families with MLH1 status into a separate variable.
+Now we can apply the functions on the full families, saving the full
+families with MLH1 status into a separate variable.
 
 ```{r remove proband status from families}
 mlh1StatusFamilies <- families
@@ -116,11 +124,10 @@ for(i in 1:length(families)){
 
 ```
 
-
-
 ## First Degree Families
 
-Next we will filter down to the first degree families (proband, parents, siblings).
+Next we will filter down to the first degree families (proband, parents,
+siblings).
 
 ```{r first degree families function}
 firstDegreeFamilyMembers <- function(ped){
@@ -147,7 +154,18 @@ firstDegreeFamilyMembers <- function(ped){
 
 ## Ambry Information
 
-The Ambry requistion [form](https://www.ambrygen.com/file/material/view/1751/Cancer%20Test%20Requisition%20Form%20(Comprehensive)%20(16403_0).pdf) has limited information about the proband, and very limited information about the proband's family history. Sometimes the only information known about the proband and their family history is from this form or a similar form, so we will simulate the restrictive nature of this data collection for the proband and their relatives. While the ambry form contains a free text box to enter any relatives at all, we will use the function above to restrict to first degree families to ensure that we are able to draw all connections in the pedigree (for example if there is a cousin in the form that we don't know their parents, we won't know where to attach them).
+The Ambry requistion
+[form](https://www.ambrygen.com/file/material/view/1751/Cancer%20Test%20Requisition%20Form%20(Comprehensive)%20(16403_0).pdf)
+has limited information about the proband, and very limited information
+about the proband's family history. Sometimes the only information known
+about the proband and their family history is from this form or a
+similar form, so we will simulate the restrictive nature of this data
+collection for the proband and their relatives. While the ambry form
+contains a free text box to enter any relatives at all, we will use the
+function above to restrict to first degree families to ensure that we
+are able to draw all connections in the pedigree (for example if there
+is a cousin in the form that we don't know their parents, we won't know
+where to attach them).
 
 ```{r restrict to ambry information functions}
 ## Function to filter down to Ambry info ##
@@ -178,10 +196,11 @@ ambryRelativeInfo <- function(ped){
 
 ## Filter to Affected Family
 
-Next we want to make a function that will filter to the affected family members in addition to the proband and their parents.
+Next we want to make a function that will filter to the affected family
+members in addition to the proband and their parents.
 
 ```{r affected family function}
-#returns all affected family members and proband (affected or otherwise)
+#returns all affected family members and proband (affected or otherwise) and parents of proband
 affectedFamilyMembers <- function(ped){
   proband <- ped %>% filter(isProband==1)
   mother <- ped %>% filter(ID == proband$MotherID)
@@ -195,7 +214,8 @@ affectedFamilyMembers <- function(ped){
 
 ## Create Families
 
-Using the many functions we have defined above, we can now take our full family pedigrees and generate limited pedigrees.
+Using the many functions we have defined above, we can now take our full
+family pedigrees and generate limited pedigrees.
 
 ```{r generating families}
 #make first degree families
@@ -211,7 +231,6 @@ for(i in 1:length(firstDegree)){
   rels = ambryRelativeInfo(firstDegree[[i]])
   famAm = rbind.fill(prob, rels)
   famAm = famAm %>% affectedFamilyMembers()
-  print(nrow(famAm))
   ambryFirstDegree[[i]] = famAm
 }
 ```
@@ -272,6 +291,7 @@ describeFamilies <- function(fams){
 #### Full Family
 
 Considering MLH1 Status:
+
 ```{r description of full families including mlh1 status}
 #changing considered families allows us to make this function more reusable
 considered_fams = mlh1StatusFamilies
@@ -279,9 +299,8 @@ print("Full Families from PedUtils")
 describeFamilies(considered_fams)
 ```
 
-
-
 Removed MLH1 Status:
+
 ```{r description of full families, cache=TRUE}
 #changing considered families allows us to make this function more reusable
 considered_fams = families
@@ -305,7 +324,9 @@ print("First Degree Families with Restricted Ambry Information")
 describeFamilies(considered_fams)
 ```
 
-Below we have the function to count how many affected family members there are in each family. 0 means that the family members are all unaffected, 1 means one family member is affected, etc. 
+Below we have the function to count how many affected family members
+there are in each family. 0 means that the family members are all
+unaffected, 1 means one family member is affected, etc.
 
 ```{r affected families detailed description function}
 affectedFamiliesLister <- function(f){
@@ -345,9 +366,6 @@ considered_fams = ambryFirstDegree
 print("First Degree Families with Restricted Ambry Information")
 print(unlist(affectedFamiliesLister(considered_fams)))
 ```
-
-
-
 
 ## Generating PanelPRO Output
 
@@ -392,75 +410,56 @@ for(i in 1:length(families)){
 # Error in .boundAgeFromRelatives(rel_ages = rel_ages) :
 #  object 'AgeDistribution' not found
 
-#works when we just consider the proband
-for(i in 1:length(families)){
-  out = PanelPRO::PanelPRO(ambryFirstDegree[[i]] %>% filter(isProband==1), genes="MLH1", cancers="Colorectal")
-  id = as.character(probandIDS[i])
-  firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
-  outputsFirstDegreeAmbry[[i]] = out#DF
-}
+
 ```
 
-The code to get the outputs for the ambry information first degree families is not working because of the following family:
+The code to get the outputs for the ambry information first degree
+families is not working because of the following family:
 
-```{r}
-ambryFirstDegree[[3]]
+```{r troubleshooting}
+#works when we just consider the proband
+# for(i in 1:length(families)){
+#   out = PanelPRO::PanelPRO(ambryFirstDegree[[i]] %>% filter(isProband==1), genes="MLH1", cancers="Colorectal")
+#   id = as.character(probandIDS[i])
+#   firstDegreeAmbryCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
+#   outputsFirstDegreeAmbry[[i]] = out#DF
+# }
+# ambryFirstDegree[[3]]
 #out = PanelPRO::PanelPRO(ambryFirstDegree[[1]], genes="MLH1", cancers="Colorectal")
 ```
 
 and we get the following error message:
 
+Error in .boundAgeFromRelatives(rel_ages = rel_ages) : object
+'AgeDistribution' not found 9. .boundAgeFromRelatives(rel_ages =
+rel_ages) 8. FUN(X[[i]], ...) 7. lapply(rel_ages_list,
+function(rel_ages) { .boundAgeFromRelatives(rel_ages = rel_ages) }) 6.
+ageImpute(ped = ped, rel_l = rel_l, proband = proband, impute_times =
+impute.times, max_iter_tries = max.iter.tries, penet_db =
+db$penet$penet_c, penet_cbc_db = db$penet$penet_cbc) 5. (function (ped,
+rel_l) { ageImpute(ped = ped, rel_l = rel_l, proband = proband,
+impute_times = impute.times, max_iter_tries = max.iter.tries, penet_db =
+db$penet$penet_c, ... 4. mapply(FUN = f, ..., SIMPLIFY = FALSE) 3.
+Map(function(ped, rel_l) { ageImpute(ped = ped, rel_l = rel_l, proband =
+proband, impute_times = impute.times, max_iter_tries = max.iter.tries,
+penet_db = db$penet$penet_c, penet_cbc_db = db$penet$penet_cbc) ... 2.
+checkFam(ped = pedigree, db = db, proband = proband, unknown.race =
+unknown.race, unknown.ancestry = unknown.ancestry, ignore.proband.germ =
+ignore.proband.germ, impute.missing.ages = impute.missing.ages,
+impute.times = iterations, max.iter.tries = max.iter.tries, random.seed
+= random.seed) 1. PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes =
+"MLH1", cancers = "Colorectal")
 
-Error in .boundAgeFromRelatives(rel_ages = rel_ages) : 
-object 'AgeDistribution' not found
-9.
-.boundAgeFromRelatives(rel_ages = rel_ages)
-8.
-FUN(X[[i]], ...)
-7.
-lapply(rel_ages_list, function(rel_ages) {
-.boundAgeFromRelatives(rel_ages = rel_ages)
-})
-6.
-ageImpute(ped = ped, rel_l = rel_l, proband = proband, impute_times = impute.times, 
-max_iter_tries = max.iter.tries, penet_db = db$penet$penet_c, 
-penet_cbc_db = db$penet$penet_cbc)
-5.
-(function (ped, rel_l) 
-{
-ageImpute(ped = ped, rel_l = rel_l, proband = proband, impute_times = impute.times, 
-max_iter_tries = max.iter.tries, penet_db = db$penet$penet_c, ...
-4.
-mapply(FUN = f, ..., SIMPLIFY = FALSE)
-3.
-Map(function(ped, rel_l) {
-ageImpute(ped = ped, rel_l = rel_l, proband = proband, impute_times = impute.times, 
-max_iter_tries = max.iter.tries, penet_db = db$penet$penet_c, 
-penet_cbc_db = db$penet$penet_cbc) ...
-2.
-checkFam(ped = pedigree, db = db, proband = proband, unknown.race = unknown.race, 
-unknown.ancestry = unknown.ancestry, ignore.proband.germ = ignore.proband.germ, 
-impute.missing.ages = impute.missing.ages, impute.times = iterations, 
-max.iter.tries = max.iter.tries, random.seed = random.seed)
-1.
-PanelPRO::PanelPRO(ambryFirstDegree[[i]], genes = "MLH1", cancers = "Colorectal")
+Above we have put the PanelPRO outputs:
 
-
-
-Above we have put the PanelPRO outputs: 
-
-| Variable | Description | 
-| ----- | ---- | 
-| fullCarrierRisk | Carrier Risk for MLH1 given the full family pedigree (no MLH1 information) |
-| outputsFull | Outputs of PanelPRO for full family pedigree (no MLH1 information) |
-| firstDegreeCarrierRisk | Carrier Risk for MLH1 given the first degree family pedigree |
-| outputsFirstDegree | Outputs of PanelPro for first degree families (no MLH1 information)|
-| firstDegreeAmbryCarrierRisk | Carrier risk for MLH1 given ambry information and restricted pedigree (proband, parents, and affected siblings)|
-| outputsFirstDegreeAmbry | PanelPRO outputs for restricted information families|
-
-
-
-
+| Variable                    | Description                                                                                                     |
+|----------------------------------------|--------------------------------|
+| fullCarrierRisk             | Carrier Risk for MLH1 given the full family pedigree (no MLH1 information)                                      |
+| outputsFull                 | Outputs of PanelPRO for full family pedigree (no MLH1 information)                                              |
+| firstDegreeCarrierRisk      | Carrier Risk for MLH1 given the first degree family pedigree                                                    |
+| outputsFirstDegree          | Outputs of PanelPro for first degree families (no MLH1 information)                                             |
+| firstDegreeAmbryCarrierRisk | Carrier risk for MLH1 given ambry information and restricted pedigree (proband, parents, and affected siblings) |
+| outputsFirstDegreeAmbry     | PanelPRO outputs for restricted information families                                                            |
 
 ## Table
 
@@ -483,30 +482,35 @@ summaryTableMLH1 <- as.data.frame(summaryTableMLH1)
 names(summaryTableMLH1) <- c("Carrier Risk for Full Families", "Carrier Risk for First Degree Families", "Carrier Risk for Ambry Info", "Affected Individuals Full Familes", "Affected Individuals First Degree Families", "True MLH1 Carriers in Probands")
 
 print(summaryTableMLH1)
+head(summaryTableMLH1)
 
 summaryTable <- cbind(1:numberFamilies, summaryTableMLH1)
 names(summaryTable) <- c("famNumber", "carrierRiskFullFamilies", "carrierRiskFirstDegreeFamilies", "carrierRiskAmbryInfo", "affectedIndividualsFullFamilies", "affectedIndividualsFirstDegreeFamilies", "probandsMLH1")
 summaryTable
 
+summaryTable$carrierRiskFullFamilies <- as.numeric(summaryTable$carrierRiskFullFamilies)
+summaryTable$carrierRiskAmbryInfo <- as.numeric(summaryTable$carrierRiskAmbryInfo)
+summaryTable$carrierRiskFirstDegreeFamilies <- as.numeric(summaryTable$carrierRiskFirstDegreeFamilies)
 ggplot(data= summaryTable) +  geom_point(aes(x=famNumber, y=carrierRiskFullFamilies), color="Red") + 
                               geom_point(aes(x=famNumber, y= carrierRiskFirstDegreeFamilies), color="Blue") + 
                               geom_point(aes(x=famNumber, y=carrierRiskAmbryInfo), color="Green") +
-                              geom_point(aes(x=famNumber, y=probandsMLH1), color = "Purple") +
-                              #scale_y_continuous(breaks = scales::pretty_breaks(n = 10), limits = c(0,1)) +
+                              #geom_point(aes(x=famNumber, y=probandsMLH1), color = "Purple") +
+                              scale_y_log10() +
                               labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
 
 
 ggplot(data= summaryTable) +  geom_point(aes(x=famNumber, y=carrierRiskFullFamilies, color="Carrier Risk for Full Families")) + 
                               geom_point(aes(x=famNumber, y= carrierRiskFirstDegreeFamilies, color="Carrier Risk for First Degree Families")) + 
                               geom_point(aes(x=famNumber, y=carrierRiskAmbryInfo, color="Carrier Risk Given Ambry Info")) +
-                              geom_point(aes(x=famNumber, y=probandsMLH1, color = "Probands with MLH1")) +
-                              #scale_y_continuous(breaks = scales::pretty_breaks(n = 10), limits = c(0,1)) +
-                              labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
+                              #geom_point(aes(x=famNumber, y=probandsMLH1, color = "Probands with MLH1")) +
+                              scale_y_log10() +
+                              labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk (log 10 scale)")
 ```
-make 3 scatter plots 
-carrier risk for full family vs first degree
-carrier risk for full family vs ambry
-carrier risk ambry vs first degree
+
+make 3 scatter plots carrier risk for full family vs first degree
+carrier risk for full family vs ambry carrier risk ambry vs first degree
+
+** upload and install panelpro on cannon cluster and run this with 100,000 families
 
 ```{r}
 head(summaryTable)
@@ -515,99 +519,134 @@ tidyRisks <- summaryTable %>%
 head(tidyRisks)
 nrow(tidyRisks)
 
-ggplot(data = tidyRisks, aes(x = famNumber, y = riskLevel)) +
-  geom_point(aes(x = famNumber, y = riskLevel, colour= probandsMLH1, shape = affectedIndividualsFirstDegreeFamilies)) +
+ggplot(data = tidyRisks, aes(x = famNumber, y = as.numeric(riskLevel))) +
+  geom_point(aes(x = famNumber, y = as.numeric(riskLevel), colour= probandsMLH1, shape = affectedIndividualsFirstDegreeFamilies)) +
   #scale_y_discrete(name = "mlh1 risk", breaks=c("0","0.01","0.1","0.5","1"), limits = c(-1,1) ) +
   facet_wrap(vars(riskType), ncol = 3) +
-  labs(x = "Family ID", y = "Carrier Risk for MLH1") 
+  labs(x = "Family ID", y = "Carrier Risk for MLH1 (log 10 scale)") +scale_y_continuous(breaks = seq(0,0.5,0.05)) + scale_y_log10()
+
+ggplot(data = summaryTable) +
+  geom_point(aes(x= carrierRiskAmbryInfo, y= carrierRiskFullFamilies)) +
+  labs(x = "Ambry Carrier Risk First Degree Families", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Ambry and Full Family Information")
 ```
+**1/20/23 notes try this again with taking out unaffected 1st and second degree fam members
+look at the extreme points of the graph and see if they correspond to intuition
+concern that the largest probability is 3% 
 
-see if the bias is predictable
-get rid of the purple points--instead give the proband carriers as a triangle and the noncarriers as a circle
-we want to see if we can predict the green using blue (predict full fam given ambry info)
+see if the bias is predictable get rid of the purple points--instead
+give the proband carriers as a triangle and the noncarriers as a circle
+we want to see if we can predict the green using blue (predict full fam
+given ambry info)
 
-add another category first and second degree relatives affected only #closer to ambry
+add another category first and second degree relatives affected only
+#closer to ambry
 
-try a box plot getting rid of family id's, computing differences between the four points of each family and plot those
+try a box plot getting rid of family id's, computing differences between
+the four points of each family and plot those
 
+## differences
 
 ```{r difference between predictions}
 head(summaryTable)
 summaryTable <- summaryTable %>% 
                     mutate(diffFullFirst = as.double(carrierRiskFullFamilies) - as.double(carrierRiskFirstDegreeFamilies)) %>%
                     mutate(diffFullAmbry = as.double(carrierRiskFullFamilies) - as.double(carrierRiskAmbryInfo)) %>%
-                    mutate(diffFullAmbry = as.double(carrierRiskFullFamilies) - as.double(carrierRiskAmbryInfo)) %>%
+                    mutate(diffFirstAmbry = as.double(carrierRiskFirstDegreeFamilies) - as.double(carrierRiskAmbryInfo))
 head(summaryTable)
+tidyDiffs <- summaryTable %>%
+  pivot_longer(c("diffFullFirst", "diffFullAmbry", "diffFirstAmbry"), names_to = "diffBetween", values_to = "diffAmt")
+head(tidyDiffs)
+nrow(tidyDiffs)
+
+ggplot(data = tidyDiffs, aes(x = famNumber, y = diffAmt)) +
+  geom_point(aes(x = famNumber, y = diffAmt, colour= probandsMLH1, shape = affectedIndividualsFirstDegreeFamilies)) +
+  #scale_y_discrete(name = "mlh1 risk", breaks=c("0","0.01","0.1","0.5","1"), limits = c(-1,1) ) +
+  facet_wrap(vars(diffBetween), ncol = 3) +
+  labs(x = "Family ID", y = "Difference for Carrier Risk for MLH1") 
+
+
+```
+
+Note: that with more affected individuals in the first degree family and with probands who have MLH1 then we can see that the predicted carrier risk is higher for the families with more information. 
+
+put full families on one axis and then ambry families on the other axis (predictor x variable)
+calculate r2, think about linearity and outliers--median polished regression or loess, need something robust to outliers
+
+# Models 
+
+## Median polish
+```{r median polished regression}
+fitMedianPolished <- rlm(carrierRiskFullFamilies ~ carrierRiskAmbryInfo, data = summaryTable)
+summary(fitMedianPolished)
+
+# finally, plot the data and the fitted curve
+ggplot(data = summaryTable, aes(x= carrierRiskAmbryInfo, y= carrierRiskFullFamilies)) +
+  geom_point() + 
+  geom_line(aes(y = predict(fitMedianPolished)))+
+  labs(x = "Ambry Carrier Risk First Degree Families", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Ambry and Full Family Information with Loess Regression")
+```
+
+```{r median polished regression with covariates}
+#consider the affected individuals of the full family
+fitMedianPolished2 <- rlm(carrierRiskFullFamilies ~ carrierRiskAmbryInfo + affectedIndividualsFullFamilies, data = summaryTable)
+summary(fitMedianPolished2)
+
+# finally, plot the data and the fitted curve
+ggplot(data = summaryTable, aes(x= carrierRiskAmbryInfo, y= carrierRiskFullFamilies)) +
+  geom_point() + 
+  geom_line(aes(y = predict(fitMedianPolished2)))+
+  labs(x = "Ambry Carrier Risk First Degree Families", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Ambry and Full Family Information with Loess Regression")
+```
+
+## Loess
+
+```{r loess model}
+# next, use the loess() function to fit a model
+fitLoess <- loess(carrierRiskFullFamilies ~ carrierRiskAmbryInfo, data = summaryTable, span = 0.2)
+summary(fitLoess) #RSE is 0.00397 (seems good but I'm not sure)
+
+# finally, plot the data and the fitted curve
+ggplot(data = summaryTable, aes(x= carrierRiskAmbryInfo, y= carrierRiskFullFamilies)) +
+  geom_point() + 
+  geom_line(aes(y = predict(fitLoess)))+
+  labs(x = "Ambry Carrier Risk First Degree Families", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Ambry and Full Family Information with Loess Regression") 
+```
+
+```{r loess with covariates}
+fitLoess2 <- loess(carrierRiskFullFamilies ~ carrierRiskAmbryInfo + affectedIndividualsFullFamilies, data = summaryTable, span = 0.2)
+summary(fitLoess2) #RSE is 0.00397 (seems good but I'm not sure)
+
+# finally, plot the data and the fitted curve
+ggplot(data = summaryTable, aes(x= carrierRiskAmbryInfo, y= carrierRiskFullFamilies)) +
+  geom_point() + 
+  geom_line(aes(y = predict(fitLoess2)))+
+  labs(x = "Ambry Carrier Risk First Degree Families", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Ambry and Full Family Information with Loess Regression") 
 ```
 
 
-## Graphs
+** look at a higher allele frequency eg x10
+First degree family information and ambry information have similar risk predictions, but we see that for first degree families which have affected individuals, the carrier risk was predicted to be higher for the families who have just ambry information/affected individuals.
 
-```{r draft graphs, echo = FALSE}
-# fullRisk <- unlist(fullCarrierRisk)
-# summary(fullRisk)
-# fullRisk #here the highest carrier risk corresponds with the actual carrier
-# 
-# firstDegreeRisk <- unlist(firstDegreeCarrierRisk)
-# summary(firstDegreeRisk)
-# firstDegreeRisk #here it does not
-# 
-# mlh1FamiliesTotal <- c()
-# actualMLH1 <- list()
-# for(i in 1:length(families)){
-#   if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 ==1)) > 0){
-#     mlh1FamiliesTotal <- c(mlh1FamiliesTotal, i)
-#     actualMLH1[[i]] = 1
-#     } 
-#   else{
-#     actualMLH1[[i]] = 0
-#     }
+Goal: predict this type of bias and come up with some sort of model that is able to map this
+
+## affected individuals second degree family and ambry info
+
+```{r affected individuals second degree family}
+# #function to determine if someone is maternal or paternal
+# maternalPaternal <- function(ped){
 # }
 # 
-# probandMLH1 <- list()
-# for(i in 1:length(families)){
-#   proband <- families[[i]] %>% filter(isProband == 1)
-#   if(!is.na(proband$MLH1) && proband$MLH1 == 1){
-#     probandMLH1[i] <- 1
-#   }
-#   else{
-#     probandMLH1[i] <- 0
-#   }
+# secondDegAmbry <- list()
+# for(i in 1:numberFamilies){
+#   secondDegAmbry[[i]] <- affectedFamilyMembers(families[[i]])
+#   #include proband
+#   #include parents
+#   #include affected siblings
+#   #include affected grandparents
+#   #include affected aunts and uncles
+#   if
 # }
-# probandMLH1
-# 
-# 
-# ggplot(data= as.data.frame(fullRisk)) + geom_histogram(aes(x=fullRisk))
-# 
-# 
-# ggplot(data= as.data.frame(firstDegreeRisk)) + geom_histogram(aes(x=firstDegreeRisk))
-# 
-# 
-# ggplot(data= as.data.frame(fullRisk)) + geom_col(aes(x=1:length(families), y = fullRisk))
-# 
-# 
-# ggplot(data= as.data.frame(firstDegreeRisk)) + geom_col(aes(x=1:length(families), y = firstDegreeRisk))
-# 
-# summaryTableMLH1 <- summaryTableMLH1 %>% mutate("famID" = 1:length(families))
-#                                                   
-# #facet_grid(
+# describeFamilies(secondDegAmbry)
 
+#need to inspect the families because the 
 ```
-
-
-```{r plotting}
-# risks <- as.data.frame(c(1:length(families), c(unlist(fullCarrierRisk)), c(unlist(firstDegreeCarrierRisk)),c(unlist(firstDegreeAmbryCarrierRisk)), c(unlist(probandMLH1))))
-# #ggplot(data = risks
-# 
-# fullCarrierRisk <- unlist(fullCarrierRisk)
-# a <- as.data.frame(c(1:10), fullCarrierRisk)
-# names(a) <- c("Family ID", "Carrier Risk")
-# hist(unlist(fullCarrierRisk))
-```
-
-
-
-
-
-
-
