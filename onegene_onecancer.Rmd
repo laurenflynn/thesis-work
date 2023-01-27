@@ -14,7 +14,7 @@ each level of the families, carrier risk,
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache= TRUE)
 set.seed(777)
-setwd("/Users/flynnlauren7/Desktop/Internships Summer 2022/Bayes Mendel/PedUtils/R")
+setwd("../PedUtils/R")
 files.sources = list.files()
 sapply(files.sources, source) #loads in all the PedUtils functions
 
@@ -36,7 +36,7 @@ are including is colorectal cancer.
 
 ```{r generate families, warning=FALSE, message=FALSE, cache = TRUE}
 #generate families
-numberFamilies <- 500
+numberFamilies <- 5
 families = list()
 probandIDS = c()
 probandMLH1Status = c()
@@ -114,12 +114,14 @@ removeRelativeStatus <- function(ped){
 Now we can apply the functions on the full families, saving the full
 families with MLH1 status into a separate variable.
 
+
+** Note: should we be removing MLH1 status from family members? I think probably ot
 ```{r remove proband status from families}
 mlh1StatusFamilies <- families
 
 for(i in 1:length(families)){
   families[[i]] <- removeProbandStatus(families[[i]])
-  families[[i]] <- removeRelativeStatus(families[[i]])
+  #families[[i]] <- removeRelativeStatus(families[[i]])
 }
 
 ```
@@ -629,6 +631,34 @@ First degree family information and ambry information have similar risk predicti
 
 Goal: predict this type of bias and come up with some sort of model that is able to map this
 
+
+```{r test affected family}
+affectedFamilyMembersAll <- function(ped){
+  proband <- ped %>% filter(isProband==1)
+  relatives <- ped %>% filter(isAffAny==1)
+  relatives <- relatives %>% filter(isProband==0)
+  affectedFam <- rbind(proband, relatives)
+  return(affectedFam)
+}
+
+affectedOnly <- lapply(families, affectedFamilyMembersAll)
+
+
+outputsAffectedOnly <- list ()
+affectedOnlyCarrierRisk <- list()
+#considers probands and their parents and affected family members
+for(i in 1:length(families)){
+ # browser()
+  out = PanelPRO::PanelPRO(affectedOnly[[i]], genes="MLH1", cancers="Colorectal", debug = TRUE)
+  id = as.character(probandIDS[i])
+  affectedOnlyCarrierRisk [[i]] <- out$posterior.prob[[id]]$estimate[2]
+  outputsAffectedOnly[[i]] = out#DF
+}
+
+```
+
+Issue: as we can see, simply running the model based on affected family members and the proband doesn't work because it breaks links in the family tree which causes errors eg: "ID 1 has been removed from pedigree since they are not connected with any proband."
+
 ## affected individuals second degree family and ambry info
 
 ```{r affected individuals second degree family}
@@ -640,6 +670,7 @@ Goal: predict this type of bias and come up with some sort of model that is able
 # for(i in 1:numberFamilies){
 #   secondDegAmbry[[i]] <- affectedFamilyMembers(families[[i]])
 #   #include proband
+
 #   #include parents
 #   #include affected siblings
 #   #include affected grandparents
