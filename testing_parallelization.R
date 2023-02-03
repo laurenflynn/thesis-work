@@ -13,7 +13,7 @@ library(PanelPRO)
 library(tidyverse)
 library(MASS)
 library(parallel)
-library(parallel)
+
 
 
 # Generate Families ----
@@ -22,7 +22,7 @@ families = list()
 probandIDS = c()
 probandMLH1Status = c()
 
-for (i in 1:numberFamilies) {
+generateFamily <- function() {
   # Cancers
   cancers = "Colorectal"
   # Genes
@@ -58,7 +58,7 @@ for (i in 1:numberFamilies) {
   probandMLH1Status = c(probandMLH1Status, proband$MLH1)
   # PanelPRO can be run on the simulated family
   #out = PanelPRO:::PanelPRO11(fam)
-  families[[i]] = famDF
+  return(famDF)
   #outputs = c(outputs, out)
   
 }
@@ -134,6 +134,8 @@ ambryRelativeInfo <- function(ped){
 }
 
 
+
+
 ## Function to filter to affected family members, proband, and parents ----
 affectedFamilyMembers <- function(ped){
   proband <- ped %>% filter(isProband==1)
@@ -145,22 +147,36 @@ affectedFamilyMembers <- function(ped){
   return(affectedFam)
 }
 
+### ambry info both proband and relative ###
+ambryInfo <- function(ped){
+  proband <- ambryProbandInfo(ped)
+  relatives <- ambryRelativeInfo(ped)
+  family <- rbind.fill(proband, relatives)
+  family <- affectedFamilyMembers(family)
+  return(family)
+}
+
+
+## function to make a binary list of proband MLH1 carrier status
+mlh1Probands <- function(ped){
+  if(nrow(ped %>% filter(MLH1 ==1) %>% filter(isProband==1) > 0)){
+    return(1)
+  } 
+  else{
+    return(0)
+  }
+}
+
 
 
 
 # Run Filters in parallel ----
-cl <- makeCluster(24)
+cores <- 10
+cl <- makeCluster(cores)
 clusterExport(cl, c("families"))
-families <- mclapply(families, removeProbandStatus, mc.cores = 24, mc.preschedule=FALSE)
-firstDegree <- mclapply(families, firstDegreeFamilyMembers, mc.cores = 24, mc.preschedule=FALSE)
-prob <- mclapply(firstDegree, ambryProbandInfo, mc.cores = cores, mc.preschedule = FALSE)
-rels <- # NEED TO FINISH HERE LAUREN
-  for(i in 1:length(firstDegree)){
-    prob = ambryProbandInfo(firstDegree[[i]])
-    rels = ambryRelativeInfo(firstDegree[[i]])
-    famAm = rbind.fill(prob, rels)
-    famAm = famAm %>% affectedFamilyMembers()
-    ambryFirstDegree[[i]] = famAm
-  }
+families <- mclapply(families, removeProbandStatus, mc.cores = cores, mc.preschedule=FALSE) #removes mlh1 status from probands
+firstDegree <- mclapply(families, firstDegreeFamilyMembers, mc.cores = cores, mc.preschedule=FALSE) #filters to first degree
+ambryFirstDegree <- mclapply(firstDegree, ambryInfo, mc.cores = cores, mc.preschedule = FALSE) #filters first degree info
+mlh1ProbandsTotal <- mclapply(mlh1StatusFamilies, mlh1Probands, mc.cores = cores, mc.preschedule = FALSE) #determines which families have mlh1
 stopCluster(cl)
 
