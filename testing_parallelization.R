@@ -5,7 +5,10 @@ set.seed(777)
 setwd("../PedUtils/R")
 files.sources = list.files()
 sapply(files.sources, source) #loads in all the PedUtils functions
-setwd("../../thesis-work/")
+# setwd("../../PanelPRO/R")
+# files.sources = list.files()
+# sapply(files.sources, source)
+setwd("../../thesis-work")
 library(plyr) #need to load plyr before dplyr
 library(dplyr)
 library(truncnorm)
@@ -19,12 +22,12 @@ library(doParallel)
 
 
 # Generate Families ----
-numberFamilies <- 10000
+numberFamilies <- 1000
 families = list()
 probandIDS = c()
 probandMLH1Status = c()
 
-cores <- 48
+cores <- 10
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 families <- foreach(i=1:numberFamilies, .packages =c("truncnorm","tidyverse")) %dopar%{
@@ -72,48 +75,17 @@ families <- foreach(i=1:numberFamilies, .packages =c("truncnorm","tidyverse")) %
   
 }
 
+probandIDS <- foreach(i=1:numberFamilies, .packages="tidyverse") %dopar%{
+  proband <- families[[i]] %>% filter(isProband==1)
+  probandID <- proband$ID
+}
 
-# registerDoParallel(cl)
-# families <- foreach(i=1:numberFamilies, .packages="truncnorm") %dopar% {
-#   # Cancers
-#   cancers = "Colorectal"
-#   # Genes
-#   genes = "MLH1"
-#   #family members
-#   # Paternal aunts, paternal uncles
-#   nSibsPatern =floor(rtruncnorm(n=2, mean=3, 3))
-#   # Maternal aunts, maternal uncles
-#   nSibsMatern = floor(rtruncnorm(n=2, mean=3, 3))
-#   # Sisters and brothers
-#   nSibs = floor(rtruncnorm(n=2, mean=3, 3))
-#   # We make the assumption that the number of sons and daughters for the
-#   # proband and all siblings, is the same. Nieces and nephews of the proband
-#   # are not sampled separately.
-#   nGrandchild = floor(rtruncnorm(n=2, mean=6, 2))
-#   nChild = floor(rtruncnorm(n=2, mean=3, 2))
-#   
-#   # Simulate family using `PedUtils` code
-#   fam = sim.runSimFam(nSibsPatern, nSibsMatern, nSibs, nChild,
-#                       PanelPRODatabase, genes, cancers,
-#                       includeGeno = TRUE, includeBiomarkers = TRUE)
-#   famDF = as.data.frame(fam)
-#   for(j in 1:nrow(famDF)){
-#     if(famDF[j,]$isAffAny == 0){
-#       famDF[j,]$AgeAny = NA    
-#     }
-#     if(famDF[j,]$isAffCOL == 0){
-#       famDF[j,]$AgeCOL = NA    
-#     }
-#   }
-#   proband = famDF %>% filter(isProband==1)
-#   probandIDS = c(probandIDS, proband$ID)
-#   probandMLH1Status = c(probandMLH1Status, proband$MLH1)
-#   # PanelPRO can be run on the simulated family
-#   #out = PanelPRO:::PanelPRO11(fam)
-#   families[[i]] = famDF
-#   #outputs = c(outputs, out)
-#   
-# }
+probandMLH1Status <- foreach(i=1:numberFamilies, .packages = "tidyverse") %dopar%{
+  proband <- families[[i]] %>% filter(isProband==1)
+  probandMLH1Status <- proband$MLH1
+}
+
+sum(unlist(probandMLH1Status)) #there are 8 probands with MLH1
 
 
 # Functions to Filter Family Info ----
@@ -209,23 +181,11 @@ ambryInfo <- function(ped){
 }
 
 
-## function to make a binary list of proband MLH1 carrier status ----
-mlh1Probands <- function(ped){
-  if(nrow(ped %>% filter(MLH1 ==1) %>% filter(isProband==1) > 0)){
-    return(1)
-  } 
-  else{
-    return(0)
-  }
-}
-
-
-
 
 # Run Filters in parallel with mclapply ----
 #cores <- 10
 #cl <- makeCluster(cores)
-clusterExport(cl, c("families"))
+clusterExport(cl, c("families")) #not sure if we need this if we generate families in the cluster
 families <- mclapply(families, removeProbandStatus, mc.cores = cores, mc.preschedule=FALSE) #removes mlh1 status from probands
 firstDegree <- mclapply(families, firstDegreeFamilyMembers, mc.cores = cores, mc.preschedule=FALSE) #filters to first degree
 ambryFirstDegree <- mclapply(firstDegree, ambryInfo, mc.cores = cores, mc.preschedule = FALSE) #filters first degree info
@@ -233,7 +193,11 @@ mlh1ProbandsTotal <- mclapply(mlh1StatusFamilies, mlh1Probands, mc.cores = cores
 stopCluster(cl)
 
 
+outputsFull <- foreach(i=1:numberFamilies, .packages="PanelPRO") %dopar% {
+  PanelPRO::PanelPRO(families[[i]], genes="MLH1", cancers="Colorectal")
+}
 
+fullCarrierRisk <- foreach()
 outputsFull <- list ()
 fullCarrierRisk <- list()
 considered_fams = families

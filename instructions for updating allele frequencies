@@ -1,0 +1,8 @@
+Directions how to update allele frequencies in PanelPRO in R (requires the PanelPRO library to be downloaded from GitHub)
+
+1. Run script updating_allele_freq.R, updating paths accordingly. The PanelPRODatabase object needs to save to the data folder in PanelPRO. The script can be adjusted to desired allele frequencies
+
+
+2. Run reinstallingPanelPRO.R, making sure to restart R
+
+3. Reload PanelPRO with library(PanelPRO)
