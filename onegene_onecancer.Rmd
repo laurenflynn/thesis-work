@@ -115,7 +115,9 @@ Now we can apply the functions on the full families, saving the full
 families with MLH1 status into a separate variable.
 
 
-** Note: should we be removing MLH1 status from family members? I think probably ot
+** Note: should we be removing MLH1 status from family members? I think probably not
+Update: doing this now only in the masking section
+
 ```{r remove proband status from families}
 mlh1StatusFamilies <- families
 
@@ -214,6 +216,25 @@ affectedFamilyMembers <- function(ped){
 }
 ```
 
+
+## Masked Information from Unaffected
+```{r}
+maskedInfoAmbry <- function(ped){
+  #first we will include the proband and the affected relatives
+  affected <- ped %>% filter(isProband == 1 | isAffAny == 1)
+  #unaffected relatives will have all information masked besides the fact that they exist
+  unaffected <- ped %>% filter(isProband == 0 & isAffAny == 0)
+  unaffected$CurAge <- 0
+  unaffected$isDead <- 0
+  unaffected$Twins <- 0
+  unaffected$MLH1 <- 0
+  print(names(affected))
+  print(names(unaffected))
+  masked <- rbind(affected, unaffected)
+  return(masked)
+}
+```
+
 ## Create Families
 
 Using the many functions we have defined above, we can now take our full
@@ -221,19 +242,24 @@ family pedigrees and generate limited pedigrees.
 
 ```{r generating families}
 #make first degree families
-firstDegree = list()
+firstDegree <- list()
 for(i in 1:length(families)){
   firstDegree[[i]] = firstDegreeFamilyMembers(families[[i]])
 }
 
 #restrict to ambry information
-ambryFirstDegree = list()
+ambryFirstDegree <- list()
 for(i in 1:length(firstDegree)){
   prob = ambryProbandInfo(firstDegree[[i]])
   rels = ambryRelativeInfo(firstDegree[[i]])
   famAm = rbind.fill(prob, rels)
   famAm = famAm %>% affectedFamilyMembers()
   ambryFirstDegree[[i]] = famAm
+}
+
+maskedFamilies <- list()
+for(i in 1:length(families)){
+  maskedFamilies[[i]] = maskedInfoAmbry(families[[i]])
 }
 ```
 
@@ -395,6 +421,16 @@ for(i in 1:length(families)){
   outputsFirstDegree[[i]] = out#DF
 }
 
+
+# for masked affected families
+outputsMasked <- list ()
+maskedCarrierRisk <- list()
+for(i in 1:length(families)){
+  out = PanelPRO::PanelPRO(maskedFamilies[[i]], genes="MLH1", cancers="Colorectal")
+  id = as.character(probandIDS[i])
+  firstDegreeCarrierRisk[[i]] <- out$posterior.prob[[id]]$estimate[2]
+  outputsFirstDegree[[i]] = out#DF
+}
 # 
 # 
 #for first degree ambry families

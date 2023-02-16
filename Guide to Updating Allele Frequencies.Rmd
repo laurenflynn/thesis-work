@@ -1,0 +1,27 @@
+---
+title: "Instructions for Updating Allele Frequencies in PanelPRO"
+author: "Lauren Flynn"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Allele frequencies for over 20 genes are included in PanelPRO. They are divided into three ancestral groups: Ashkenazi Jewish, non-Ashkenazi Jewish, and Italian. If you would like to update these allele frequencies for any gene or ancestral group, you can follow the steps below. 
+
+1. Ensure you have downloaded the code for PanelPRO, which can be done by cloning the PanelPRO GitHub repository. It is important to note where in your machine you have saved it. 
+
+2. Run the script below, updating paths accordingly. The PanelPRODatabase object needs to save to the data folder in PanelPRO. In this example, the MLH1 allele frequency is updated to 0.01. The script can be adjusted to desired alleles and allele frequencies. The script has been pasted below: 
+
+```{r updating_allele_freq}
+load("~/PanelPRO/data/PanelPRODatabase.rda")
+PanelPRODatabase$AlleleFrequency[["MLH1_anyPV",1]] <- 0.01
+PanelPRODatabase$AlleleFrequency[["MLH1_anyPV",2]] <- 0.01
+PanelPRODatabase$AlleleFrequency[["MLH1_anyPV",3]] <- 0.01
+# View(PanelPRODatabase$AlleleFrequency) #this is optional; you can view all allele frequencies
+save(PanelPRODatabase, file = "~/PanelPRO/data/PanelPRODatabase.rda")
+```
+
+3. Your allele frequencies are now updated. If there are any issues, you can remove your current version of PanelPRO and rebuild it. 
