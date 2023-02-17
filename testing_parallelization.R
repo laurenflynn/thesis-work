@@ -5,9 +5,6 @@ set.seed(777)
 setwd("../PedUtils/R")
 files.sources = list.files()
 sapply(files.sources, source) #loads in all the PedUtils functions
-# setwd("../../PanelPRO/R")
-# files.sources = list.files()
-# sapply(files.sources, source)
 setwd("../../thesis-work")
 library(plyr) #need to load plyr before dplyr
 library(dplyr)
@@ -19,10 +16,16 @@ library(parallel)
 library(foreach)
 library(doParallel)
 
+# Set MLH1 Frequency to 0.2 ----
+load("~/PanelPRO/data/PanelPRODatabase.rda")
+PanelPRODatabase$AlleleFrequency[["MLH1_anyPV",1]] <- 0.2
+PanelPRODatabase$AlleleFrequency[["MLH1_anyPV",2]] <- 0.2
+PanelPRODatabase$AlleleFrequency[["MLH1_anyPV",3]] <- 0.2
+save(PanelPRODatabase, file = "~/PanelPRO/data/PanelPRODatabase.rda")
 
 
 # Generate Families ----
-numberFamilies <- 1000
+numberFamilies <- 100
 families = list()
 probandIDS = c()
 probandMLH1Status = c()
@@ -180,6 +183,22 @@ ambryInfo <- function(ped){
   return(family)
 }
 
+## Function to mask information from unaffected individuals ----
+maskedInfoAmbry <- function(ped){
+  #first we will include the proband and the affected relatives
+  affected <- ped %>% filter(isProband == 1 | isAffAny == 1)
+  #unaffected relatives will have all information masked besides the fact that they exist
+  unaffected <- ped %>% filter(isProband == 0 & isAffAny == 0)
+  unaffected$CurAge <- 0
+  unaffected$isDead <- 0
+  unaffected$Twins <- 0
+  unaffected$MLH1 <- 0
+  print(names(affected))
+  print(names(unaffected))
+  masked <- rbind(affected, unaffected)
+  return(masked)
+}
+
 
 
 # Run Filters in parallel with mclapply ----
@@ -190,9 +209,80 @@ families <- mclapply(families, removeProbandStatus, mc.cores = cores, mc.presche
 firstDegree <- mclapply(families, firstDegreeFamilyMembers, mc.cores = cores, mc.preschedule=FALSE) #filters to first degree
 ambryFirstDegree <- mclapply(firstDegree, ambryInfo, mc.cores = cores, mc.preschedule = FALSE) #filters first degree info
 mlh1ProbandsTotal <- mclapply(mlh1StatusFamilies, mlh1Probands, mc.cores = cores, mc.preschedule = FALSE) #determines which families have mlh1
+maskedFamilies <- mclapply(families, maskedInfoAmbry, mc.cores = cores, mc.preschedule = FALSE)
 stopCluster(cl)
 
 
+
+# Family Descriptions ----
+describeFamilies <- function(fams){
+  affectedFamilies = 0 
+  affectedProbands = 0
+  famSizes = c()
+  mlh1Families = 0
+  mlh1Probands = 0 
+  #affectedFamiliesList = list()
+  #j = 1
+  for(i in 1:length(fams)){
+    f = fams[[i]]
+    sizeOfFamily = nrow(f)
+    famSizes = c(famSizes, sizeOfFamily)
+    f = f %>% filter(isAffAny==1) %>% filter(isProband==0)
+    if(nrow(f)>0){
+      affectedFamilies = affectedFamilies + 1
+      #affectedFamiliesList[[j]] = f
+      #j = j + 1
+    }
+    mlh1fams = fams[[i]] %>% filter(isProband==0) %>% filter(MLH1==1)
+    if(nrow(mlh1fams) > 0){
+      mlh1Families = mlh1Families + 1
+    }
+    pb = fams[[i]] %>% filter(isProband==1)
+    if(pb$isAffAny == 1){
+      affectedProbands = affectedProbands + 1
+    }
+    if(!is.na(pb$MLH1)){
+      if(pb$MLH1 == 1){
+        mlh1Probands = mlh1Probands + 1
+      }}
+  }
+  print(paste0("Number of families: ", length(fams)))
+  print(paste0("Number of families with affected individuals: ", affectedFamilies))
+  print(paste0("Number of families with affected probands: ", affectedProbands))
+  print(paste0("Average family size: ", mean(famSizes)))
+  print("Summary of family sizes")
+  print(summary(famSizes))
+  print(paste0("Number of probands that with MLH1 gene: ", mlh1Probands))
+  print(paste0("Number of families (non-proband) with MLH1 gene: ", mlh1Families))
+}
+
+
+considered_fams = mlh1StatusFamilies
+print("Full Families from PedUtils with MLH1 Status for Probands")
+describeFamilies(considered_fams)
+
+considered_fams = families
+print("Full Families from PedUtils")
+describeFamilies(considered_fams)
+
+considered_fams = maskedFamilies
+print("Full Families from PedUtils with Unaffected Information Masked")
+describeFamilies(considered_fams)
+
+
+considered_fams = firstDegree
+print("First Degree Families")
+describeFamilies(considered_fams)
+
+considered_fams = ambryFirstDegree
+print("First Degree Families with Restricted Ambry Information")
+describeFamilies(considered_fams)
+
+
+
+cores <- 10
+cl <- makeCluster(cores)
+registerDoParallel(cl)
 outputsFull <- foreach(i=1:numberFamilies, .packages="PanelPRO") %dopar% {
   PanelPRO::PanelPRO(families[[i]], genes="MLH1", cancers="Colorectal")
 }
@@ -296,7 +386,7 @@ summary(fitMedianPolished)
 ggplot(data = summaryTable, aes(x= carrierRiskAmbryInfo, y= carrierRiskFullFamilies)) +
   geom_point() + 
   geom_line(aes(y = predict(fitMedianPolished)))+
-  labs(x = "Ambry Carrier Risk First Degree Families", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Ambry and Full Family Information with Loess Regression")
+  labs(x = "Ambry Carrier Risk First Degree Families", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Ambry and Full Family Information with Median Polish Regression")
 
 
 
