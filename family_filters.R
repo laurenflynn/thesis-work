@@ -98,6 +98,23 @@ maskedInfoAmbry <- function(ped){
   return(masked)
 }
 
+# affected families lister ----
+affectedFamiliesLister <- function(f){
+  affectedFamiliesList = list()
+  for(i in 1:length(families)){
+    fam = as.data.frame(f[[i]])
+    fam = fam %>% filter(isAffAny==1) %>% filter(isProband==0)
+    if(nrow(fam) > 0){
+      affectedFamiliesList[[i]] = nrow(fam)
+    }
+    else{
+      affectedFamiliesList[[i]] = 0}
+  }
+  return(affectedFamiliesList)
+}
+
+
+
 # Family Descriptions ----
 describeFamilies <- function(fams){
   affectedFamilies = 0 
