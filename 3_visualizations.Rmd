@@ -1,0 +1,10 @@
+```{r}
+visual = ggplot(data= summaryTable) +  geom_point(aes(x=famID, y=fullCarrierRisk, color="Full Carrier Risk")) +
+  geom_point(aes(x=famID, y= carrierRiskUnaffectedInfoMasked, color = "Carrier Risk with Unaffected Info Masked")) +
+  geom_point(aes(x=famID, y= firstDegreeCarrierRisk, color = "First Degree Carrier Risk")) +
+  scale_y_log10() +
+  labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
+
+print(visual)
+```
+

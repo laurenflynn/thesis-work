@@ -90,11 +90,22 @@ maskedInfoAmbry <- function(ped){
   unaffected <- ped %>% filter(isProband == 0 & isAffAny == 0)
   unaffected$CurAge <- 1
   unaffected$isDead <- 0
-  unaffected$Twins <- 0
-  unaffected$MLH1 <- 0
+  unaffected$Twins <- NA
+  unaffected$MLH1 <- NA
   print(names(affected))
   print(names(unaffected))
   masked <- rbind(affected, unaffected)
+  return(masked)
+}
+
+maskedMother <- function(ped){
+  #first we will include the proband and the affected relatives
+  pro <- ped %>% filter(isProband == 1)
+  mother <- ped %>% filter(ID == pro$MotherID)
+  other <- ped %>% filter(isProband == 0 && ID != pro$motherID)
+  mother$MLH1 <- NA
+  masked <- rbind(pro, mother)
+  masked <- rbind(masked, other)
   return(masked)
 }
 
