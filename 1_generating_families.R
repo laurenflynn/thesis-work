@@ -19,8 +19,8 @@ library(doParallel)
 
 
 mlh1Freq <- 0.05
-numberFamilies <- 10
-cores <- 8
+numberFamilies <- 1000
+cores <- 10
 
 
 # Set MLH1 Frequency to user provided val ----
@@ -93,15 +93,15 @@ probandMLH1Status <- foreach(i=1:numberFamilies, .packages = "tidyverse") %dopar
 }
 
 mlh1StatusFamilies <- families
-families <- foreach(i=1:numberFamilies, .export='removeProbandStatus') %dopar%{
+families <- foreach(i=1:numberFamilies) %dopar%{
   families[[i]]=removeProbandStatus(families[[i]])
 }
 
-firstDegree <- foreach(i=1:numberFamilies, .export = 'firstDegreeFamilyMembers') %dopar%{
+firstDegree <- foreach(i=1:numberFamilies) %dopar%{
   firstDegreeFamilyMembers(families[[i]])
 }
 
-maskedFamilies <- foreach(i=1:numberFamilies, .export = 'maskedInfoAmbry') %dopar%{
+maskedFamilies <- foreach(i=1:numberFamilies) %dopar%{
   maskedInfoAmbry(families[[i]])
 }
 
@@ -113,26 +113,6 @@ describeFamilies(maskedFamilies)
 print("*******")
 print("First Degree Families")
 describeFamilies(firstDegree)
-
-
-#use probandMLH1Status instead
-
-# probandMLH1 <- list()
-# for(i in 1:length(families)){
-#   if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 ==1) %>% filter(isProband==1) > 0)){
-#     probandMLH1[[i]] = 1
-#   } 
-#   else{
-#     probandMLH1[[i]] = 0
-#   }}
-# 
-# foreach(i = 1:length(families), .packages = "dplyr") %dopar% {
-#   if(nrow(mlh1StatusFamilies[[i]] %>% filter(MLH1 == 1) %>% filter(isProband == 1)) > 0){
-#     probandMLH1[[i]] <- 1
-#   } else {
-#     probandMLH1[[i]] <- 0
-#   }
-# }
 
 
 

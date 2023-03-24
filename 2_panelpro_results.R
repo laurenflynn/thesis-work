@@ -12,7 +12,7 @@ library(doParallel)
 
 load("RObjects/familyinfo.Rdata")
 
-cores <- 8
+cores <- 10
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -23,12 +23,14 @@ fullCarrierRisk <- list()
 
 #get full outputs of PanelPRO for full families
 outputsFull <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  families[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(families[[i]], genes="MLH1", cancers="Colorectal")
   out
 }
 
 #get proband carrier risk for full families
 fullCarrierRisk <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  families[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(families[[i]], genes="MLH1", cancers="Colorectal")
   id <- as.character(probandIDS[i])
   out$posterior.prob[[id]]$estimate[2]
@@ -45,12 +47,14 @@ maskedCarrierRisk <- list()
 
 #get full outputs of PanelPRO for full families with masked information about unaffected relatives
 outputsMasked <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  maskedFamilies[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(maskedFamilies[[i]], genes="MLH1", cancers="Colorectal")
   out
 }
 
 #get proband carrier risk for full families with masked information about unaffected relatives
 maskedCarrierRisk <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  maskedFamilies[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(maskedFamilies[[i]], genes="MLH1", cancers="Colorectal")
   id <- as.character(probandIDS[i])
   out$posterior.prob[[id]]$estimate[2]
@@ -65,12 +69,14 @@ outputsFirstDegree <- list ()
 firstDegreeCarrierRisk <- list()
 #get full outputs of PanelPRO for full families with masked information about unaffected relatives
 outputsFirstDegree <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  firstDegree[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(firstDegree[[i]], genes="MLH1", cancers="Colorectal")
   out
 }
 
 #get proband carrier risk for full families with masked information about unaffected relatives
 firstDegreeCarrierRisk <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  firstDegree[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(firstDegree[[i]], genes="MLH1", cancers="Colorectal")
   id <- as.character(probandIDS[i])
   out$posterior.prob[[id]]$estimate[2]

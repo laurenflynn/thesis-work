@@ -1,4 +1,11 @@
 ```{r}
+library(tidyverse)
+load("RObjects/panelPROSummaryTable.Rdata")
+```
+
+
+
+```{r make visualization}
 visual = ggplot(data= summaryTable) +  geom_point(aes(x=famID, y=fullCarrierRisk, color="Full Carrier Risk")) +
   geom_point(aes(x=famID, y= carrierRiskUnaffectedInfoMasked, color = "Carrier Risk with Unaffected Info Masked")) +
   geom_point(aes(x=famID, y= firstDegreeCarrierRisk, color = "First Degree Carrier Risk")) +
