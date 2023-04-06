@@ -1,5 +1,5 @@
 #### Set Up ####
-
+set.seed(777)
 # load libraries
 library(plyr) #need to load plyr before dplyr
 library(dplyr)
@@ -9,27 +9,26 @@ library(MASS)
 library(parallel)
 library(foreach)
 library(doParallel)
+library(doRNG)
 
 load("RObjects/familyinfo.Rdata")
 
-cores <- 10
+cores <- 5
 cl <- makeCluster(cores)
 registerDoParallel(cl)
+registerDoRNG(seed=777, type="L'Ecuyer-CMRG")
+rand_seeds <- sample.int(1e6, numberFamilies)
+
 
 #### Full Families ####
 
-outputsFull <- list ()
 fullCarrierRisk <- list()
 
-#get full outputs of PanelPRO for full families
-outputsFull <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
-  families[[i]]$MLH1 <- NA
-  out <- PanelPRO::PanelPRO(families[[i]], genes="MLH1", cancers="Colorectal")
-  out
-}
+
 
 #get proband carrier risk for full families
 fullCarrierRisk <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  set.seed(rand_seeds[i])
   families[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(families[[i]], genes="MLH1", cancers="Colorectal")
   id <- as.character(probandIDS[i])
@@ -42,40 +41,27 @@ print("Ran PanelPRO on Full Families")
 #### Full Families with Masked Information for Unaffected Individuals ####
 
 # get outputs of PanelPRO for families with masked info
-outputsMasked <- list ()
 maskedCarrierRisk <- list()
-
-#get full outputs of PanelPRO for full families with masked information about unaffected relatives
-outputsMasked <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
-  maskedFamilies[[i]]$MLH1 <- NA
-  out <- PanelPRO::PanelPRO(maskedFamilies[[i]], genes="MLH1", cancers="Colorectal")
-  out
-}
 
 #get proband carrier risk for full families with masked information about unaffected relatives
 maskedCarrierRisk <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  set.seed(rand_seeds[i])
   maskedFamilies[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(maskedFamilies[[i]], genes="MLH1", cancers="Colorectal")
   id <- as.character(probandIDS[i])
   out$posterior.prob[[id]]$estimate[2]
 }
 
-#View(outputsMasked)
 print("Ran PanelPRO with unaffected family members info masked")
 
 
 #### First Degree Families ####
-outputsFirstDegree <- list ()
 firstDegreeCarrierRisk <- list()
-#get full outputs of PanelPRO for full families with masked information about unaffected relatives
-outputsFirstDegree <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
-  firstDegree[[i]]$MLH1 <- NA
-  out <- PanelPRO::PanelPRO(firstDegree[[i]], genes="MLH1", cancers="Colorectal")
-  out
-}
+
 
 #get proband carrier risk for full families with masked information about unaffected relatives
 firstDegreeCarrierRisk <- foreach(i = 1:length(families), .packages = c("PanelPRO")) %dopar% {
+  set.seed(rand_seeds[i])
   firstDegree[[i]]$MLH1 <- NA
   out <- PanelPRO::PanelPRO(firstDegree[[i]], genes="MLH1", cancers="Colorectal")
   id <- as.character(probandIDS[i])

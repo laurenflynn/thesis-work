@@ -38,28 +38,28 @@ firstDegreeFamilyMembers <- function(ped){
 }
 
 
-ambryProbandInfo <- function(ped){
-  proband = ped %>% filter(isProband==1)
-  #proband$riskmod <- character(0)
-  #proband$interAge <- character(0) #should these be character(0)? what does that mean?
-  proband$isDead <- 0
-  return(proband)
-}
+# ambryProbandInfo <- function(ped){
+#   proband = ped %>% filter(isProband==1)
+#   #proband$riskmod <- character(0)
+#   #proband$interAge <- character(0) #should these be character(0)? what does that mean?
+#   proband$isDead <- 0
+#   return(proband)
+# }
 
 ### relative info ###
 #for simplicity, we will just say that sex can be inferred
 #restricting to first degree family
 #here genes is just MLH1
-ambryRelativeInfo <- function(ped){
-  relatives = ped %>% filter(isProband==0)
-  #print(relatives)
-  #relatives$CurAge <- NULL
-  relatives$isDead <- NULL
-  #relatives$riskMod <- character(0)
-  #relatives$interAge <- character(0)
-  #View(relatives)
-  return(relatives)
-}
+# ambryRelativeInfo <- function(ped){
+#   relatives = ped %>% filter(isProband==0)
+#   #print(relatives)
+#   #relatives$CurAge <- NULL
+#   relatives$isDead <- NULL
+#   #relatives$riskMod <- character(0)
+#   #relatives$interAge <- character(0)
+#   #View(relatives)
+#   return(relatives)
+# }
 
 
 ## Function to filter to affected family members, proband, and parents ----
@@ -74,13 +74,13 @@ affectedFamilyMembers <- function(ped){
 }
 
 ### ambry info both proband and relative ---- 
-ambryInfo <- function(ped){
-  proband <- ambryProbandInfo(ped)
-  relatives <- ambryRelativeInfo(ped)
-  family <- rbind.fill(proband, relatives)
-  family <- affectedFamilyMembers(family)
-  return(family)
-}
+# ambryInfo <- function(ped){
+#   proband <- ambryProbandInfo(ped)
+#   relatives <- ambryRelativeInfo(ped)
+#   family <- rbind.fill(proband, relatives)
+#   family <- affectedFamilyMembers(family)
+#   return(family)
+# }
 
 ## Function to mask information from unaffected individuals ----
 maskedInfoAmbry <- function(ped){
@@ -92,22 +92,20 @@ maskedInfoAmbry <- function(ped){
   unaffected$isDead <- 0
   unaffected$Twins <- NA
   unaffected$MLH1 <- NA
-  print(names(affected))
-  print(names(unaffected))
   masked <- rbind(affected, unaffected)
   return(masked)
 }
 
-maskedMother <- function(ped){
-  #first we will include the proband and the affected relatives
-  pro <- ped %>% filter(isProband == 1)
-  mother <- ped %>% filter(ID == pro$MotherID)
-  other <- ped %>% filter(isProband == 0 && ID != pro$motherID)
-  mother$MLH1 <- NA
-  masked <- rbind(pro, mother)
-  masked <- rbind(masked, other)
-  return(masked)
-}
+# maskedMother <- function(ped){
+#   #first we will include the proband and the affected relatives
+#   pro <- ped %>% filter(isProband == 1)
+#   mother <- ped %>% filter(ID == pro$MotherID)
+#   other <- ped %>% filter(isProband == 0 && ID != pro$motherID)
+#   mother$MLH1 <- NA
+#   masked <- rbind(pro, mother)
+#   masked <- rbind(masked, other)
+#   return(masked)
+# }
 
 # affected families lister ----
 affectedFamiliesLister <- function(f){

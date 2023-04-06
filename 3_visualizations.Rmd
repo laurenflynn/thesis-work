@@ -13,5 +13,10 @@ visual = ggplot(data= summaryTable) +  geom_point(aes(x=famID, y=fullCarrierRisk
   labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
 
 print(visual)
+
+#ggsave("test2.png")
+```
+```{r}
+ggsave("carrierRisksUnaffectedAgesSetTo1.png")
 ```
 

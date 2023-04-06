@@ -16,11 +16,12 @@ library(MASS)
 library(parallel)
 library(foreach)
 library(doParallel)
+library(doRNG)
 
 
 mlh1Freq <- 0.05
-numberFamilies <- 1000
-cores <- 10
+numberFamilies <- 10
+cores <- 5
 
 
 # Set MLH1 Frequency to user provided val ----
@@ -38,7 +39,12 @@ probandMLH1Status = c()
 
 cl <- makeCluster(cores)
 registerDoParallel(cl)
+registerDoRNG(seed=777, type="L'Ecuyer-CMRG")
+rand_seeds <- sample.int(1e6, numberFamilies)
+
+
 families <- foreach(i=1:numberFamilies, .packages =c("truncnorm","tidyverse")) %dopar%{
+  set.seed(rand_seeds[i])
   setwd("../PedUtils/R")
   files.sources = list.files()
   sapply(files.sources, source) #loads in all the PedUtils functions
