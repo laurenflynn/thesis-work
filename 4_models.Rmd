@@ -1,42 +1,330 @@
-```{r}
+---
+title: Modeling Relationship Between Full Carrier Risk and Carrier Risk with Unaffected
+  Relative Information Masked
+output:
+  html_document:
+    df_print: paged
+---
+
+
+
+```{r setup}
 library(tidyverse)
-load("RObjects/panelPROSummaryTable.Rdata")
+load("RObjects/panelPROSummaryTable1000FamiliesNoForEach.Rdata")
 library(MASS)
+
+load("~/thesis-work/RObjects/familyinfo1000Families_no_for_each.Rdata")
+probandAge <- c()
+for(i in 1:length(families)){
+  proband = families[[i]] %>% filter(isProband==1) 
+  probandAge <- c(probandAge, proband$CurAge)
+}
+summaryTable$probandAge <- probandAge
+```
+
+```{r logit transformation}
+logit <- function(x){
+  log(x)-log(1-x)
+}
+
+offset <- 0.00001
+summaryTable$logitFullCarrierRisk <- logit(summaryTable$fullCarrierRisk - offset)
+summaryTable$logitCarrierRiskUnaffectedInfoMasked <- logit(summaryTable$carrierRiskUnaffectedInfoMasked - offset)
+#logit spreads out those lower values and higher values
 ```
 
 
-```{r}
-fitLinear <- lm(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data=summaryTable)
+# Families with First Degree Affected Relatives
+```{r restrict to families with first degree affected relatives}
+summaryTableFirstDegAff <- summaryTable %>% filter(firstDegreeAffectedFamilyMembersBinary == 1)
+nrow(summaryTableFirstDegAff)
+```
+
+
+```{r fit linear model first degree aff}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked , data=summaryTableFirstDegAff)
 print(summary(fitLinear))
-summaryTable2 <- na.omit(summaryTable)
-ggplot(data = summaryTable2, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = probandMLH1Status)) +
+```
+Adjusted R^2 value: `summary(fitLinear)$adj.r.squared`
+
+```{r plot the model first degree aff}
+ggplot(data = summaryTableFirstDegAff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
+  geom_point(aes(color = probandMLH1Status)) +
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression", color = "1st Deg Aff")
+
+```
+
+
+```{r view residuals first degree aff}
+res <- resid(fitLinear)
+plot(fitted(fitLinear), res)
+abline(0,0)
+```
+
+```{r qqplot first degree aff}
+# make a qq plot to assess normality
+
+qqnorm(res)
+qqline(res) 
+```
+
+## Testing Covariates: Number of Affected Relatives, Age of Proband
+
+
+### Covariate: Number of Affected Relatives
+```{r fit linear model first degree aff + num aff rels}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked + numAffectedRelatives , data=summaryTableFirstDegAff)
+print(summary(fitLinear))
+```
+
+
+```{r plot the model first degree aff + num aff rels}
+ggplot(data = summaryTableFirstDegAff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
+  geom_point(aes(color = as.factor(numAffectedRelatives))) +
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression", subtitle="First Degree Family Members Affected, Covariate: Number of Affected Relatives", color = "Number of Affected Relatives")
+
+```
+### Covariate: Proband Age
+
+
+
+
+```{r fit linear model first degree aff + proband age}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked + probandAge , data=summaryTableFirstDegAff)
+print(summary(fitLinear))
+```
+Proband age seems statistically insignificant
+
+```{r plot the model first degree aff + proband age}
+ggplot(data = summaryTableFirstDegAff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
+  geom_point(aes(color =probandAge)) +
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression",subtitle="First Degree Family Members Affected, Covariate: Proband Age", color = "Proband Age")
+
+```
+
+
+### Covariates: Number of Affected Relatives and Proband Age
+
+```{r fit linear model first degree aff + num aff rels + proband age}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked + probandAge + numAffectedRelatives , data=summaryTableFirstDegAff)
+print(summary(fitLinear))
+```
+Proband age again seems statistically insignificant
+
+```{r plot the model first degree aff + num aff rels + proband age}
+ggplot(data = summaryTableFirstDegAff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
   geom_point() +
   geom_line(aes(y = predict(fitLinear)))+
-  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Linear Regression")
-ggsave("linearModel10Families.png")
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression",subtitle="First Degree Family Members Affected, Covariates: Proband Age and Number of Affected Relatives", color = "Proband Age")
+
 ```
 
-```{r}
-fitMedianPolished <- rlm(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data = summaryTable)
-print(summary(fitMedianPolished))
+#Families with No Affected First Degree Relatives
+```{r filter to no affected first degree relatives}
+summaryTableFirstDegUnaff <- summaryTable %>% filter(firstDegreeAffectedFamilyMembersBinary == 0)
+nrow(summaryTableFirstDegUnaff)
+```
 
-# finally, plot the data and the fitted curve
-ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = probandMLH1Status)) +
+```{r fit linear model first deg unaff}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked , data=summaryTableFirstDegUnaff)
+print(summary(fitLinear))
+```
+
+```{r plot the model first deg unaff}
+ggplot(data = summaryTableFirstDegUnaff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
+  geom_point(aes(color=probandMLH1Status)) +
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information Linear Regression", subtitle="First Degree Family Members Unaffected", color = "1st Deg Aff")
+```
+
+```{r view residuals first deg unaff}
+res <- resid(fitLinear)
+plot(fitted(fitLinear), res)
+abline(0,0)
+```
+
+
+
+```{r qqplot}
+# make a qq plot to assess normality
+
+qqnorm(res)
+qqline(res) 
+```
+## Testing Covariates: Number of Affected Relatives, Age of Proband
+
+
+### Covariate: Number of Affected Relatives
+```{r fit linear model first deg unaff + num aff rels}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked + numAffectedRelatives , data=summaryTableFirstDegUnaff)
+print(summary(fitLinear))
+```
+
+
+```{r plot the model first deg unaff + num aff rels}
+ggplot(data = summaryTableFirstDegUnaff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
+  geom_point(aes(color = as.factor(numAffectedRelatives))) +
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression", subtitle="First Degree Family Members Unaffected, Covariate: Number of Affected Relatives", color = "Number of Affected Relatives")
+
+```
+### Covariate: Proband Age
+
+
+
+
+```{r fit linear model first deg unaff + proband age}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked + probandAge , data=summaryTableFirstDegUnaff)
+print(summary(fitLinear))
+```
+Here the proband age seems more statistically signficant for families that do not have an affected first degree relative
+
+```{r plot the model  first deg unaff + proband age}
+ggplot(data = summaryTableFirstDegUnaff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
+  geom_point(aes(color =probandAge)) +
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression",subtitle="First Degree Family Members Unaffected, Covariate: Proband Age", color = "Proband Age")
+
+```
+
+
+### Covariates: Number of Affected Relatives and Proband Age
+
+```{r fit linear model first deg unaff + num aff rels + proband age}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked + probandAge + numAffectedRelatives , data=summaryTableFirstDegUnaff)
+print(summary(fitLinear))
+```
+Proband age seems statistically significant here as well
+
+```{r plot the model first deg unaff + num aff rels + proband age}
+ggplot(data = summaryTableFirstDegUnaff, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
   geom_point() +
-  geom_line(aes(y = predict(fitMedianPolished)))+
-  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Loess Regression")
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression",subtitle="First Degree Family Members Unaffected, Covariates: Proband Age and Number of Affected Relatives", color = "Proband Age")
+
 ```
 
+# All families
 
-```{r}
+First we will run a linear regression model on all families generated. 
+
+
+
+```{r linear model all families}
+fitLinear <- lm(logitFullCarrierRisk ~ logitCarrierRiskUnaffectedInfoMasked , data=summaryTable)
+print(summary(fitLinear))
+
+```
+
+```{r residuals of lm all families}
+residuals <- residuals(fitLinear)
+qqnorm(residuals)
+qqline(residuals)
+#the residuals should fit to the line in the qqplot if the data is normally distributed
+
+range(summaryTable$fullCarrierRisk)
+range(summaryTable$carrierRiskUnaffectedInfoMasked)
+range(summaryTable$logitFullCarrierRisk)
+range(summaryTable$logitCarrierRiskUnaffectedInfoMasked)
+```
+
+```{r plot all families}
+ggplot(data = summaryTable, aes(x= logitCarrierRiskUnaffectedInfoMasked, y= logitFullCarrierRisk)) +
+  geom_point(aes(color = as.factor(firstDegreeAffectedFamilyMembersBinary))) +
+  geom_line(aes(y = predict(fitLinear)))+
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Linear Regression", color = "1st Deg Aff")
+
+```
+
+# Other models
+
+## Loess Regression
+
+### All Families
+
+```{r loess model fit and plot}
 fitLoess <- loess(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data = summaryTable, span = 0.2)
 summary(fitLoess) #RSE is 0.00397 (seems good but I'm not sure)
 
-# finally, plot the data and the fitted curve
-loessVis = ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = probandMLH1Status)) +
-  geom_point() +
+loessVis = ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk)) +
+  geom_point(aes(color = probandMLH1Status)) +
   geom_line(aes(y = predict(fitLoess)))+
   labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Loess Regression")
 
 print(loessVis)
 ```
+
+
+### First Degree Affected Families
+
+```{r loess model fit and plot first deg aff}
+fitLoess <- loess(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data = summaryTableFirstDegAff, span = 0.2)
+summary(fitLoess) #RSE is 0.00397 (seems good but I'm not sure)
+
+loessVis = ggplot(data = summaryTableFirstDegAff, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk)) +
+  geom_point(aes(color = probandMLH1Status)) +
+  geom_line(aes(y = predict(fitLoess)))+
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Loess Regression", subtitle="First Degree Family Members Affected")
+
+print(loessVis)
+```
+
+
+### First Degree Unaffected Families
+
+```{r loess model fit and plot first deg unaff}
+fitLoess <- loess(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data = summaryTableFirstDegUnaff, span = 0.2)
+summary(fitLoess) #RSE is 0.00397 (seems good but I'm not sure)
+
+loessVis = ggplot(data = summaryTableFirstDegUnaff, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk)) +
+  geom_point(aes(color = probandMLH1Status)) +
+  geom_line(aes(y = predict(fitLoess)))+
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Loess Regression", subtitle="First Degree Family Members Affected")
+
+print(loessVis)
+```
+
+
+
+
+
+
+## Median Polish
+
+### All Families
+```{r median polish model fit and plot}
+fitMedianPolished <- rlm(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data = summaryTable)
+print(summary(fitMedianPolished))
+
+ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk)) +
+  geom_point(aes(color = probandMLH1Status)) +
+  geom_line(aes(y = predict(fitMedianPolished)))+
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Loess Regression")
+```
+
+### First Degree Affected Families
+```{r median polish model fit and plot first deg aff}
+fitMedianPolished <- rlm(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data = summaryTableFirstDegAff)
+print(summary(fitMedianPolished))
+
+ggplot(data = summaryTableFirstDegAff, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk)) +
+  geom_point(aes(color = probandMLH1Status)) +
+  geom_line(aes(y = predict(fitMedianPolished)))+
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Loess Regression", subtitle="First Degree Family Members Affected")
+```
+
+
+### First Degree Unaffected Families
+```{r median polish model fit and plot first deg unaff}
+fitMedianPolished <- rlm(fullCarrierRisk ~ carrierRiskUnaffectedInfoMasked, data = summaryTableFirstDegUnaff)
+print(summary(fitMedianPolished))
+
+ggplot(data = summaryTableFirstDegUnaff, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk)) +
+  geom_point(aes(color = probandMLH1Status)) +
+  geom_line(aes(y = predict(fitMedianPolished)))+
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Median Polished Regression", subtitle="First Degree Family Members Unaffected")
+```
+
