@@ -1,3 +1,8 @@
+RObjects/
+images/
+slurm_log_files/
+toBeDeleted/
+
 # History files
 .Rhistory
 .Rapp.history

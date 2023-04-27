@@ -1,0 +1,141 @@
+---
+title: "Checking Error Caused by Using Masked Carrier Risk"
+output: pdf_document
+---
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+load("RObjects/summary_tables/summaryTable10000Families.Rdata")
+```
+
+# Using All Families 
+
+```{r collapse=TRUE}
+# calculate average predicted value
+avg_full <- mean(summaryTable$fullCarrierRisk) #adjusted means adjusted via prediction model
+avg_masked <- mean(summaryTable$carrierRiskUnaffectedInfoMasked)
+avg_true <- mean(as.numeric(summaryTable$probandMLH1Status))
+
+sum_full <- sum(summaryTable$fullCarrierRisk) #adjusted means adjusted via prediction model
+sum_masked <- sum(summaryTable$carrierRiskUnaffectedInfoMasked)
+sum_true <- sum(as.numeric(summaryTable$probandMLH1Status))
+# print average predicted value
+print(str_interp("Average full carrier risk score: ${avg_full}"))
+print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_masked}"))
+print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
+
+mse_full <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$fullCarrierRisk)**2)
+mse_masked <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked)**2)
+print(str_interp("Full MSE: ${mse_full}"))
+print(str_interp("Masked MSE: ${mse_masked}"))
+```   
+
+
+# Using Families with Unaffected First Degree Relatives (U1)
+
+## Unrounded
+
+```{r u1, collapse=TRUE}
+summaryTableFirstDegUnaff <- summaryTable %>% filter(firstDegreeAffectedFamilyMembersBinary == 0)
+
+
+# calculate average predicted value
+avg_full <- mean(summaryTableFirstDegUnaff$fullCarrierRisk) #adjusted means adjusted via prediction model
+avg_masked <- mean(summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)
+avg_true <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status))
+# print average predicted value
+print(str_interp("Average full carrier risk score: ${avg_full}"))
+print(str_interp("Average masked  carrier risk score: ${avg_masked}"))
+print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
+
+mse_full <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$fullCarrierRisk)**2)
+mse_masked <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)**2)
+print(str_interp("Full MSE: ${mse_full}"))
+print(str_interp("Masked MSE: ${mse_masked}"))
+```
+
+
+# Using Families with Affected First Degree Relatives (A1)
+```{r a1, collapse=TRUE}
+summaryTableFirstDegAff <- summaryTable %>% filter(firstDegreeAffectedFamilyMembersBinary == 1)
+
+
+# calculate average predicted value
+avg_full <- mean(summaryTableFirstDegAff$fullCarrierRisk) #adjusted means adjusted via prediction model
+avg_masked <- mean(summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)
+avg_true <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status))
+# print average predicted value
+print(str_interp("Average full carrier risk score: ${avg_full}"))
+print(str_interp("Average masked  carrier risk score: ${avg_masked}"))
+print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
+
+mse_full <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$fullCarrierRisk)**2)
+mse_masked <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)**2)
+print(str_interp("Full MSE: ${mse_full}"))
+print(str_interp("Masked MSE: ${mse_masked}"))
+```
+
+# Round values with clinical significance
+```{r rounded values,collapse=TRUE}
+round <- function(x){
+  if(x>=0.2){
+    return(1)
+  }
+  else{
+    return(0)
+  }
+}
+
+summaryTable$roundedFullCarrierRisk <- lapply(summaryTable$fullCarrierRisk, round)
+summaryTable$roundedFullCarrierRisk <- as.numeric(summaryTable$roundedFullCarrierRisk)
+summaryTable$roundedCarrierRiskUnaffectedInfoMasked <- lapply(summaryTable$carrierRiskUnaffectedInfoMasked, round)
+summaryTable$roundedCarrierRiskUnaffectedInfoMasked <- as.numeric(summaryTable$roundedCarrierRiskUnaffectedInfoMasked)
+summaryTable$probandMLH1Status <- as.numeric(summaryTable$probandMLH1Status)
+
+#All families
+
+#Calibration
+print(str_interp("Sum of rounded full carrier risk: ${sum(summaryTable$roundedFullCarrierRisk)}"))
+print(str_interp("Sum of rounded masked carrier risk: ${sum(summaryTable$roundedCarrierRiskUnaffectedInfoMasked)}"))
+print(str_interp("Sum of true MLH1 carriers: ${sum(summaryTable$probandMLH1Status)}"))
+
+mse_full <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$roundedFullCarrierRisk)**2)
+mse_masked <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$roundedCarrierRiskUnaffectedInfoMasked)**2)
+print(str_interp("Full MSE: ${mse_full}"))
+print(str_interp("Masked MSE: ${mse_masked}"))
+
+```
+
+
+
+
+```{r rounded first degree unaff,collapse=TRUE}
+#First Degree Unaffected
+summaryTableFirstDegUnaff <- summaryTable %>% filter(firstDegreeAffectedFamilyMembersBinary == 0)
+
+#Calibration
+print(str_interp("Sum of rounded full carrier risk: ${sum(summaryTableFirstDegUnaff$roundedFullCarrierRisk)}"))
+print(str_interp("Sum of rounded masked carrier risk: ${sum(summaryTableFirstDegUnaff$roundedCarrierRiskUnaffectedInfoMasked)}"))
+print(str_interp("Sum of true MLH1 carriers: ${sum(summaryTableFirstDegUnaff$probandMLH1Status)}"))
+
+mse_full <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$roundedFullCarrierRisk)**2)
+mse_masked <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$roundedCarrierRiskUnaffectedInfoMasked)**2)
+print(str_interp("Full MSE: ${mse_full}"))
+print(str_interp("Masked MSE: ${mse_masked}"))
+
+```
+
+
+```{r rounded values first degree affected, collapse=TRUE}
+#First degree affected
+summaryTableFirstDegAff <- summaryTable %>% filter(firstDegreeAffectedFamilyMembersBinary == 1)
+#Calibration
+print(str_interp("Sum of rounded full carrier risk: ${sum(summaryTableFirstDegAff$roundedFullCarrierRisk)}"))
+print(str_interp("Sum of rounded masked carrier risk: ${sum(summaryTableFirstDegAff$roundedCarrierRiskUnaffectedInfoMasked)}"))
+print(str_interp("Sum of true MLH1 carriers: ${sum(summaryTableFirstDegAff$probandMLH1Status)}"))
+
+mse_full <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$roundedFullCarrierRisk)**2)
+mse_masked <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$roundedCarrierRiskUnaffectedInfoMasked)**2)
+print(str_interp("Full MSE: ${mse_full}"))
+print(str_interp("Masked MSE: ${mse_masked}"))
+```
+
