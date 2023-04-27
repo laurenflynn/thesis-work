@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+RObjects/
+images/
+slurm_log_files/
+toBeDeleted/
