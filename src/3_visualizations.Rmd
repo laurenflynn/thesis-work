@@ -6,16 +6,15 @@ output:
 ```{r}
 library(tidyverse)
 numberFamilies <- 10000
-load(str_interp("RObjects/summary_tables/summaryTable${numberFamilies}Families.Rdata"))
-summaryTable <- fullTable
+load(str_interp("../RObjects/summary_tables/summaryTable${numberFamilies}Families.Rdata"))
+
 ```
 
+```{r, include=FALSE}
 # Visualize the carrier risk probabilities
 
 
-## when visualizing you should color by affected probands and unaffected probands
 
-## post on basecamp tonight
 
 ##this should be a covariate in my regression
 
@@ -25,17 +24,12 @@ summaryTable <- fullTable
 
 ##another analysis is for high risk clinics where we take a subset of the generated families and only take the families that have one affected relative or more and then refit the adjustment and compare across the two groups
 
-## see if the models are similar
 
 ## fit two separate models and if you have a very flexible model it could be applicable to both
-
-## affect of first degree relatives is probably strong, color plots binary if they have a first degree family member affected
-
-## dig into this discussion with some examples families[[2]] can be one of them
-
-## this could be factored into the model as well
+```
 
 ```{r make visualization}
+summaryTable <- summaryTable[1:10000,]
 logit <- function(x){
   log(x)-log(1-x)
 }
@@ -124,7 +118,7 @@ ggplot(data = summaryTable, aes(x= logit(carrierRiskUnaffectedInfoMasked), y= lo
   geom_point() +
   labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color = "Affected First Degree Family Members") 
 
-ggsave("1000familiesLogitRisksColorFirstDegreeAff.png")
+
 ```
 
 
@@ -136,7 +130,6 @@ ggplot(data = summaryTable, aes(x= logit(carrierRiskUnaffectedInfoMasked), y= lo
   geom_point() +
   labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color = "Affected Proband") 
 
-ggsave("1000familiesLogitRisksColorProbandAff.png")
 ```
 
 
@@ -157,7 +150,7 @@ logit <- function(x){
 }
 ggplot(data = summaryTable, aes(x= logit(carrierRiskUnaffectedInfoMasked), y= logit(fullCarrierRisk), color = as.factor(numAffectedRelatives))) +
   geom_point() +
-  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color ="Proband MLH1 Status") 
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color ="Number of Affected Relatives") 
 
 ```
 

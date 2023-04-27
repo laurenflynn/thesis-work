@@ -16,10 +16,10 @@ library(MASS)
 numberFamilies <- 10000
 
 #load in the families dataframe
-load(str_interp("~/thesis-work/RObjects/family_dfs/listOfDataFrames/familyinfo${numberFamilies}Families_no_for_each.Rdata"))
+load(str_interp("../RObjects/family_dfs/listOfDataFrames/familyinfo${numberFamilies}Families_no_for_each.Rdata"))
 
 #load in the summary table of PanelPro results
-load(str_interp("~/thesis-work/RObjects/summary_tables/summaryTable${numberFamilies}Families.Rdata"))
+load(str_interp("../RObjects/summary_tables/summaryTable${numberFamilies}Families.Rdata"))
 
 probandAge <- c()
 for(i in 1:length(families)){
@@ -94,7 +94,6 @@ ggplot(data = summaryTableFirstDegAff, aes(x= logitCarrierRiskUnaffectedInfoMask
   labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "MLH1 Carrier Risk for Masked Info and Full Family Information with Linear Regression", color = "Number of Affected Relatives") 
 
 
-ggsave("indicatorsFirstDegAff.png")
 ```
 
 ```{r view residuals first degree aff with indicators}
@@ -119,8 +118,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -171,8 +170,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -207,8 +206,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -292,8 +291,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -346,8 +345,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -418,8 +417,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -470,8 +469,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -508,8 +507,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -542,8 +541,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -577,8 +576,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -616,8 +615,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -647,8 +646,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -680,8 +679,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
@@ -716,8 +715,8 @@ print(str_interp("Average predicted (adjusted) carrier risk score: ${avg_adj}"))
 print(str_interp("Average masked (unadjusted) carrier risk score: ${avg_unadj}"))
 print(str_interp("Average number of true carriers of MLH1: ${avg_true}"))
 
-mse_adj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted**2)
-mse_unadj <- mean(as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked**2)
+mse_adj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$predicted)**2)
+mse_unadj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
