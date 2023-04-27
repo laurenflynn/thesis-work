@@ -1,13 +1,8 @@
-<<<<<<< HEAD
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
 RObjects/
 images/
 slurm_log_files/
 toBeDeleted/
-=======
+
 # History files
 .Rhistory
 .Rapp.history
@@ -47,4 +42,3 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
->>>>>>> main
