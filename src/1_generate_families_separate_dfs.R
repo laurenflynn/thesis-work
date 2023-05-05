@@ -5,8 +5,8 @@ set.seed(777)
 setwd("../PedUtils/R")
 files.sources = list.files()
 sapply(files.sources, source) #loads in all the PedUtils functions
-setwd("../../thesis-work")
-source("family_filters.R")
+setwd("~/git_thesis_work")
+source("src/family_filters.R")
 library(plyr) #need to load plyr before dplyr
 library(truncnorm)
 library(PanelPRO)
@@ -54,7 +54,7 @@ for(i in 1:numberFamilies){
   # Simulate family using `PedUtils` code
   fam = sim.runSimFam(nSibsPatern, nSibsMatern, nSibs, nChild,
                       PanelPRODatabase, genes, cancers,
-                      includeGeno = TRUE, includeBiomarkers = TRUE)
+                      includeGeno = TRUE, includeBiomarkers = TRUE, censoring = FALSE)
   famDF = as.data.frame(fam)
   for(j in 1:nrow(famDF)){
     if(famDF[j,]$isAffAny == 0){
@@ -71,16 +71,6 @@ for(i in 1:numberFamilies){
   families[[i]] = famDF
 }
 
-# for(i in 1:numberFamilies){
-#   proband <- families[[i]] %>% filter(isProband==1)
-#   probandID <- proband$ID
-#   probandIDS <- c(probandIDS, probandID) #add the proband ID to the vector of proband IDs
-# }
-
-# for(i in 1:numberFamilies){
-#   proband <- families[[i]] %>% filter(isProband==1)
-#   probandMLH1Status <- proband$MLH1
-# }
 
 mlh1StatusFamilies <- families
 for(i in 1:numberFamilies){
@@ -143,9 +133,11 @@ for(i in 1:length(families)){
 # file_name = str_interp("RObjects/familyinfo${numberFamilies}Families_no_for_each.Rdata")
 # save(families, maskedFamilies, mlh1StatusFamilies, firstDegree, probandMLH1Status, probandIDS, numAffectedRelatives,numMLH1Relatives,numMLH1UnaffectedRelatives,numberFamilies, file = file_name)
 
-
+# save.image(file = "no_censoring.RData", version = NULL, ascii = FALSE,
+#            compress = !ascii, safe = TRUE)
+save(families, maskedFamilies,firstDegree,probandMLH1Status,probandIDS,numAffectedRelatives,numMLH1Relatives, numMLH1UnaffectedRelatives,probandAffectionStatus,firstDegreeAffected, file="no_censoring.Rdata")
 for(i in 1:length(families)){
-  file_name = str_interp("RObjects/family_dfs/${numberFamilies}families/family_info_${numberFamilies}_families_no_for_each_${i}.Rdata")
+  file_name = str_interp("RObjects/family_dfs/individualDataFrames/no_censoring/family_info_${numberFamilies}_families_no_for_each_${i}.Rdata")
   family = families[[i]]
   maskedFamily = maskedFamilies[[i]]
   firstDeg = firstDegree[[i]]
