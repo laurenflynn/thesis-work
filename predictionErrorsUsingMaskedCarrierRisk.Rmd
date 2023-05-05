@@ -4,7 +4,7 @@ output: pdf_document
 ---
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-load("RObjects/summary_tables/summaryTable10000Families.Rdata")
+load("RObjects/summary_tables/summaryTable10000Families_no_censoring.Rdata")
 ```
 
 # Using All Families 
