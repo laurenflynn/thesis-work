@@ -27,7 +27,7 @@ load(str_interp("../RObjects/summary_tables/summaryTable10000Families_no_censori
 ```
 
 ```{r make visualization}
-summaryTable <- summaryTable[1:10,]
+summaryTable <- summaryTable[1:10000,]
 logit <- function(x){
   log(x)-log(1-x)
 }
@@ -175,6 +175,7 @@ ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarri
 ```{r}
 ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = as.factor(numAffectedRelatives))) +
   geom_point() +
+  geom_abline() +
   labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color = "Number of Affected Relatives") 
 
 ```
@@ -184,8 +185,8 @@ ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarri
 ```{r}
 ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = probandMLH1Status)) +
   geom_point() +
-  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information Zoomed In", color = "Proband MLH1 Status") +
-  xlim(0, 0.15) + ylim(0, 0.15)
+  geom_abline() +
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information Zoomed In", color = "Proband MLH1 Status") 
 ```
 
 

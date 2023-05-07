@@ -4,6 +4,7 @@ output: pdf_document
 ---
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(xtable)
 load("RObjects/summary_tables/summaryTable10000Families_no_censoring.Rdata")
 ```
 
@@ -27,6 +28,8 @@ mse_full <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$full
 mse_masked <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Full MSE: ${mse_full}"))
 print(str_interp("Masked MSE: ${mse_masked}"))
+
+all <- data.frame("Families"="All","Average full carrier risk score"=avg_full,"Average masked (unadjusted) carrier risk score"= avg_masked,"Average number of true carriers of MLH1"=avg_true,"Full MSE"=mse_full,"Masked MSE"=mse_masked)
 ```   
 
 
@@ -51,6 +54,8 @@ mse_full <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summ
 mse_masked <- mean((as.numeric(summaryTableFirstDegUnaff$probandMLH1Status) - summaryTableFirstDegUnaff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Full MSE: ${mse_full}"))
 print(str_interp("Masked MSE: ${mse_masked}"))
+
+u1 <- data.frame("Families"="U1","Average full carrier risk score"=avg_full,"Average masked (unadjusted) carrier risk score"= avg_masked,"Average number of true carriers of MLH1"=avg_true,"Full MSE"=mse_full,"Masked MSE"=mse_masked)
 ```
 
 
@@ -72,6 +77,12 @@ mse_full <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summar
 mse_masked <- mean((as.numeric(summaryTableFirstDegAff$probandMLH1Status) - summaryTableFirstDegAff$carrierRiskUnaffectedInfoMasked)**2)
 print(str_interp("Full MSE: ${mse_full}"))
 print(str_interp("Masked MSE: ${mse_masked}"))
+
+a1 <- data.frame("Families"="A1","Average full carrier risk score"=avg_full,"Average masked (unadjusted) carrier risk score"= avg_masked,"Average number of true carriers of MLH1"=avg_true,"Full MSE"=mse_full,"Masked MSE"=mse_masked)
+```
+```{r}
+tab <- rbind(all,a1,u1)
+print(xtable(tab, digits=5), file = "carrierRiskValidation.tex")
 ```
 
 # Round values with clinical significance

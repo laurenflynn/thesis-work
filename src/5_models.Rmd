@@ -295,7 +295,8 @@ modelSummary4 <- data.frame("name"="Model 4-A1","b0"=b0,"b1"=b1,"adjr2"=adjr2,"f
 
 modelSummary <- rbind.fill(modelSummary, modelSummary4)
 
-print(xtable(modelSummary), file = "a1_models.tex")
+modelSummaryA1 <- modelSummary
+print(xtable(modelSummaryA1, digits=4), file = "a1_models.tex")
 ```
 
 
@@ -533,8 +534,8 @@ modelSummary4 <- data.frame("name"="Model 4-U1","b0"=b0,"b1"=b1,"adjr2"=adjr2,"f
                             "avg_adj"=avg_adj,"avg_unadj"=avg_unadj,"avg_true"=avg_true)
 
 modelSummary <- rbind.fill(modelSummary, modelSummary4)
-
-print(xtable(modelSummary), file = "u1_models.tex")
+modelSummaryU1 <- modelSummary
+print(xtable(modelSummaryU1, digits =4), file = "u1_models.tex")
 
 ```
 
@@ -852,4 +853,17 @@ mse_unadj <- mean((as.numeric(summaryTable$probandMLH1Status) - summaryTable$car
 print(str_interp("Adjusted MSE: ${mse_adj}"))
 print(str_interp("Unadjusted MSE: ${mse_unadj}"))
 ```
+
+
+
+# Clinical Threshold Proportions
+```{r}
+clinicallySignificantFull <- summaryTable %>% filter(fullCarrierRisk >0.05)
+clinicallySignificantMasked <- summaryTable %>% filter(carrierRiskUnaffectedInfoMasked >0.05)
+print(nrow(clinicallySignificantFull))
+print(nrow(clinicallySignificantMasked))
+onlySigFromMasked <- anti_join(clinicallySignificantMasked, clinicallySignificantFull, by = "famID")
+print(nrow(onlySigFromMasked))
+```
+
 
