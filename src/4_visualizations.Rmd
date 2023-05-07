@@ -1,0 +1,203 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup and read data}
+library(tidyverse)
+numberFamilies <- 10000
+load(str_interp("../RObjects/summary_tables/summaryTable10000Families_no_censoring.Rdata"))
+
+```
+
+```{r notes, include=FALSE}
+# Visualize the carrier risk probabilities
+
+
+##this should be a covariate in my regression
+
+##the bias is stronger for bias with very little family history but as the risk increases the bias is not as conspicuous
+
+##population level is what we have with 0.05
+
+##another analysis is for high risk clinics where we take a subset of the generated families and only take the families that have one affected relative or more and then refit the adjustment and compare across the two groups
+
+
+## fit two separate models and if you have a very flexible model it could be applicable to both
+```
+
+```{r make visualization}
+summaryTable <- summaryTable[1:10000,]
+logit <- function(x){
+  log(x)-log(1-x)
+}
+visual = ggplot(data= summaryTable) +  geom_point(aes(x=famID, y=fullCarrierRisk, color="Full Carrier Risk")) +
+  geom_point(aes(x=famID, y=carrierRiskUnaffectedInfoMasked, color = "Carrier Risk with Unaffected Info Masked")) +
+  geom_point(aes(x=famID, y= firstDegreeCarrierRisk, color = "First Degree Carrier Risk")) +
+  scale_y_log10() +
+  labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
+
+print(visual)
+```
+
+## Next we will generate the same plot but only focus on the full family information and the families with masked unaffected relatives
+
+```{r}
+ggplot(data= summaryTable) +  geom_point(aes(x=famID, y=fullCarrierRisk, color="Full Carrier Risk")) +
+  geom_point(aes(x=famID, y= carrierRiskUnaffectedInfoMasked, color = "Carrier Risk with Unaffected Info Masked")) +
+  scale_y_log10() +
+  labs(title= "MLH1 Carrier Risk", x= "Family ID", y="Carrier Risk")
+
+```
+## This plot shows the difference between the carrier risk with the unaffected info masked and the full carrier risk
+
+
+# do box plots by proband status
+
+```{r}
+summaryTable <- summaryTable %>% 
+                    mutate(diffMaskedFull = as.double(carrierRiskUnaffectedInfoMasked) - as.double(fullCarrierRisk))
+
+
+ggplot(data = summaryTable, aes(x = famNumber, y = diffMaskedFull)) +
+  geom_point(aes(x = famID, y = diffMaskedFull, colour= as.factor(numAffectedRelatives), shape = probandMLH1Status)) +
+  labs(x = "Family ID", y = "Unaffected Masked Risk - Full Risk", title="Difference for Carrier Risk", color = "Number of Affected Relatives", shape = "Proband MLH1 Status")
+```
+
+
+
+```{r}
+ggplot(data = summaryTable, aes(x = famNumber, y = diffMaskedFull)) +
+  geom_point(aes(x = famID, y = diffMaskedFull, colour= as.factor(probandAffectionStatus), shape = probandMLH1Status)) +
+  labs(x = "Family ID", y = "Unaffected Masked Risk - Full Risk", title="Difference for Carrier Risk", color = "Proband Cancer Affection Status", shape = "Proband MLH1 Status")
+```
+```{r}
+ggplot(data = summaryTable, aes(x = famNumber, y = diffMaskedFull)) +
+  geom_point(aes(x = famID, y = diffMaskedFull, colour= as.factor(firstDegreeAffectedFamilyMembersBinary), shape = probandMLH1Status)) +
+  labs(x = "Family ID", y = "Unaffected Masked Risk - Full Risk", title="Difference for Carrier Risk", color = "Presence of Affected First Degree Family Member(s)", shape = "Proband MLH1 Status")
+```
+
+## Next we will make a box plot to show by number of affected relatives what the difference in risk is
+
+```{r}
+summaryTable$numAffectedRelativesGroup <- cut(summaryTable$numAffectedRelatives, 
+                   breaks=c(-Inf, 0, 1,2, Inf), 
+                   labels=c("0","1","2", "3+"),
+                   right = TRUE) #the breaks are inclusive on the right i.e. (-inf,0], (0,1]...
+ggplot(summaryTable, aes(x=as.factor(numAffectedRelativesGroup), y=diffMaskedFull)) + 
+  geom_boxplot() +
+  labs(x = "Number of Affected Relatives", y = "Unaffected Masked Risk - Full Risk", title="Difference for Carrier Risk by Number of Affected Family Members") +
+  stat_summary(
+    fun.data = function(x) data.frame(y = max(x), label = paste0("n = ", length(x))),
+    geom = "text", hjust = 0.3, vjust = -0.1, size = 4
+  )
+```
+
+## Next we will compare the carrier risk scores for the full families and the masked families
+
+This will serve as a starting point for prediction
+
+```{r}
+logit <- function(x){
+  log(x)-log(1-x)
+}
+ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = probandMLH1Status)) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color ="Proband MLH1 Status") 
+
+```
+
+
+```{r}
+logit <- function(x){
+  log(x)-log(1-x)
+}
+ggplot(data = summaryTable, aes(x= logit(carrierRiskUnaffectedInfoMasked), y= logit(fullCarrierRisk), color = as.factor(firstDegreeAffectedFamilyMembersBinary))) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color = "Affected First Degree Family Members") 
+
+
+```
+
+
+```{r}
+logit <- function(x){
+  log(x)-log(1-x)
+}
+ggplot(data = summaryTable, aes(x= logit(carrierRiskUnaffectedInfoMasked), y= logit(fullCarrierRisk), color = as.factor(probandAffectionStatus))) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color = "Affected Proband") 
+
+```
+
+
+
+```{r}
+logit <- function(x){
+  log(x)-log(1-x)
+}
+ggplot(data = summaryTable, aes(x= logit(carrierRiskUnaffectedInfoMasked), y= logit(fullCarrierRisk), color = probandMLH1Status)) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color ="Proband MLH1 Status") 
+
+```
+
+```{r}
+logit <- function(x){
+  log(x)-log(1-x)
+}
+ggplot(data = summaryTable, aes(x= logit(carrierRiskUnaffectedInfoMasked), y= logit(fullCarrierRisk), color = as.factor(numAffectedRelatives))) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked (logit)", y= "Carrier Risk for Full Family Information (logit)", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color ="Number of Affected Relatives") 
+
+```
+
+## Here we will color by the number of affected relatives to see the relationship between number of affected relatives and carrier risk scores
+
+
+```{r}
+ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = as.factor(firstDegreeAffectedFamilyMembersBinary))) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Linear Regression", color = "Presence of Affected First Degree Family Members (Binary)") 
+ 
+```
+
+
+
+
+```{r}
+ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = as.factor(probandAffectionStatus))) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information with Linear Regression", color = "Proband Cancer Affection Status") 
+
+```
+ 
+```{r}
+ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = as.factor(numAffectedRelatives))) +
+  geom_point() +
+  geom_abline() +
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information", color = "Number of Affected Relatives") 
+
+```
+
+## Zoom in to the bottom left corner to see if there are any trends there
+
+```{r}
+ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = probandMLH1Status)) +
+  geom_point() +
+  geom_abline() +
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information Zoomed In", color = "Proband MLH1 Status") 
+```
+
+
+## use more distinct colors for the color scale 
+
+## an alternative to use 0, 1, 2, 3+ as the categories of the families numaffectedrels
+```{r}
+ggplot(data = summaryTable, aes(x= carrierRiskUnaffectedInfoMasked, y= fullCarrierRisk, color = as.factor(numAffectedRelatives))) +
+  geom_point() +
+  labs(x = "Carrier Risk Unaffected Info Masked", y= "Carrier Risk for Full Family Information", title = "Comparing Carrier Risk for Masked Info and Full Family Information Zoomed In", color = "Number of Affected Relatives") +
+  xlim(0, 0.15) + ylim(0, 0.15)
+```
+
+

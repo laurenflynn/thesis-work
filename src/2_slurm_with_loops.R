@@ -43,7 +43,7 @@ probandMLH1Status <- list()
 
 
 for(i in lowerbound:upperbound){
-  load(str_interp("RObjects/family_dfs/individualDataFrames/${numberFamilies}families/family_info_${numberFamilies}_families_no_for_each_${i}.Rdata"))
+  load(str_interp("RObjects/family_dfs/individualDataFrames/no_censoring/family_info_${numberFamilies}_families_no_for_each_${i}.Rdata"))
   families[[i]] = family
   firstDegree[[i]] = firstDeg
   maskedFamilies[[i]] = maskedFamily
@@ -142,7 +142,7 @@ summaryTable <- cbind(summaryTable, unlist(firstDegreeAffected))
 names(summaryTable) <- c("famID","fullCarrierRisk", "carrierRiskUnaffectedInfoMasked", "firstDegreeCarrierRisk", "probandMLH1Status", "numAffectedRelatives", "numMLH1Relatives","numMLH1UnaffectedRelatives","probandAffectionStatus","firstDegreeAffectedFamilyMembersBinary")
 
 print(nrow(summaryTable))
-file_name = str_interp("RObjects/summary_tables/job_array_1-400/panelPROSummaryTable${numberFamilies}Families${lowerbound}_${upperbound}.Rdata")
+file_name = str_interp("RObjects/summary_tables/no_censoring/panelPROSummaryTable${numberFamilies}FamiliesNoCensoring${lowerbound}_${upperbound}.Rdata")
 
 save(summaryTable, file = file_name)
 
